@@ -146,9 +146,9 @@ y_conv = tf.add(tf.matmul(x, weights), biases)
 prediction = tf.nn.softmax(y_conv)
 
 # Cross entropy
-cross_entropy = -tf.reduce_sum(y * tf.log(prediction), reduction_indices=1)
+# cross_entropy = -tf.reduce_sum(y * tf.log(prediction), reduction_indices=1)
 # Training loss
-cost = tf.reduce_mean(cross_entropy)
+# cost = tf.reduce_mean(cross_entropy)
 
 # Create an operation that initializes all variables
 init = tf.initialize_all_variables()
