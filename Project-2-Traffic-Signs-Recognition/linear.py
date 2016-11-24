@@ -28,17 +28,13 @@ X_test, y_test = test['features'], test['labels']
 # X_test = np.array(image_dict)
 
 # y_test = np.array([30,17,25, 13, 31])
-# y_test = np_utils.to_categorical(y_test)
+y_test = np_utils.to_categorical(y_test)
 # new_y = []
 # for i in range(len(y_test)):
 #   single = np.append(y_test[i], [0,0,0,0,0,0,0,0,0,0,0])
 #   new_y.append(single)
 # y_test = np.array(new_y)
 ############
-
-
-
-
 
 
 n_train = len(X_train)
@@ -125,8 +121,8 @@ X_test_norm = X_test_norm.astype(np.float32)
 
 # Parameters
 epochs = 1
-batch_size = 100
-learning_rate = 0.1
+batch_size = 50
+learning_rate = 0.01
 
 n_input = 1024  # data input (img shape: 32*32)
 n_classes = 43  # total classes 
@@ -150,9 +146,9 @@ y_conv = tf.add(tf.matmul(x, weights), biases)
 prediction = tf.nn.softmax(y_conv)
 
 # Cross entropy
-# cross_entropy = -tf.reduce_sum(y * tf.log(prediction), reduction_indices=1)
+cross_entropy = -tf.reduce_sum(y * tf.log(prediction), reduction_indices=1)
 # Training loss
-# loss = tf.reduce_mean(cross_entropy)
+cost = tf.reduce_mean(cross_entropy)
 
 # Create an operation that initializes all variables
 init = tf.initialize_all_variables()
