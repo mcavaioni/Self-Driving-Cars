@@ -1,5 +1,5 @@
 import pickle
-
+from keras.utils import np_utils
 # TODO: fill this in based on where you saved the training and testing data
 training_file = '/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #2 (Traffic Signs Recognition)/traffic-signs-data/train.p'
 testing_file = '/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #2 (Traffic Signs Recognition)/traffic-signs-data/test.p'
@@ -11,6 +11,34 @@ with open(testing_file, mode='rb') as f:
     
 X_train, y_train = train['features'], train['labels']
 X_test, y_test = test['features'], test['labels']
+
+######new test sample of 5 images
+# import glob, os
+# import cv2
+# import numpy as np
+
+# path = '/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #2 (Traffic Signs Recognition)/traffic_sign_images/32x32pix/'
+# image_dict = []
+
+# for i,infile in enumerate(glob.glob(os.path.join(path,'*.png'))):
+#     img = cv2.imread(infile)
+#     # my_key = i              
+#     image_dict.append(img) 
+# image_dict=image_dict[0:5]
+# X_test = np.array(image_dict)
+
+# y_test = np.array([30,17,25, 13, 31])
+# y_test = np_utils.to_categorical(y_test)
+# new_y = []
+# for i in range(len(y_test)):
+#   single = np.append(y_test[i], [0,0,0,0,0,0,0,0,0,0,0])
+#   new_y.append(single)
+# y_test = np.array(new_y)
+############
+
+
+
+
 
 
 n_train = len(X_train)
@@ -71,42 +99,48 @@ X_test_norm = normalize_greyscale(X_test_gray)
 
 from sklearn.cross_validation import train_test_split
 
-X_train_fin, X_val, y_train_fin, y_val = train_test_split(X_train_norm, y_train, test_size=0.33, random_state=42)
+X_train_fin, X_val, y_train_fin, y_val = train_test_split(X_train_norm, y_train, test_size=0.05, random_state=42)
 
 from keras.utils import np_utils
 
 y_train_fin = np_utils.to_categorical(y_train_fin)
 y_val = np_utils.to_categorical(y_val)
+# y_test = np_utils.to_categorical(y_test)
 
 
+
+import tensorflow as tf
+import math
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 y_train_fin = y_train_fin.astype(np.float32)
 y_val = y_val.astype(np.float32)
 y_test = y_test.astype(np.float32)
 
 X_train_fin = X_train_fin.astype(np.float32)
-
-import tensorflow as tf
+X_test_norm = X_test_norm.astype(np.float32)
 
 
 
 # Parameters
-# learning_rate = 0.2
-# training_epochs = 4
-# batch_size = 100
-# display_step = 1
+epochs = 1
+batch_size = 100
+learning_rate = 0.1
 
-n_input = 1024  # MNIST data input (img shape: 32*32)
-n_classes = 43  # MNIST total classes (0-9 digits)
+n_input = 1024  # data input (img shape: 32*32)
+n_classes = 43  # total classes 
 n_train_fin = len(X_train_fin)
 n_labels_fin = len(y_train_fin)
-n_hidden_layer = 256 # layer number of features
 
 X_train_fin = X_train_fin.reshape([-1, n_input])
 X_val = X_val.reshape([-1, n_input])
+X_test_norm = X_test_norm.reshape([-1, n_input])
+
 
 x = tf.placeholder(tf.float32)
-y = tf.placeholder("float", [None, n_classes])
+y = tf.placeholder(tf.float32)
+
 
 weights = tf.Variable(tf.truncated_normal((n_input, n_classes)))
 biases = tf.Variable(tf.zeros(n_classes))
@@ -116,10 +150,9 @@ y_conv = tf.add(tf.matmul(x, weights), biases)
 prediction = tf.nn.softmax(y_conv)
 
 # Cross entropy
-cross_entropy = -tf.reduce_sum(y * tf.log(prediction), reduction_indices=1)
-# cross_entropy = -tf.reduce_sum(y * tf.log(tf.clip_by_value(prediction,1e-10,1.0)), reduction_indices=1)
+# cross_entropy = -tf.reduce_sum(y * tf.log(prediction), reduction_indices=1)
 # Training loss
-loss = tf.reduce_mean(cross_entropy)
+# loss = tf.reduce_mean(cross_entropy)
 
 # Create an operation that initializes all variables
 init = tf.initialize_all_variables()
@@ -127,74 +160,25 @@ init = tf.initialize_all_variables()
 
 train_feed_dict = {x: X_train_fin, y: y_train_fin}
 valid_feed_dict = {x: X_val, y: y_val}
-test_feed_dict = {x: X_test, y: y_test}
-# Test Cases
-with tf.Session() as session:
-    session.run(init)
-    # session.run(loss, feed_dict={x: (X_train_fin), y: (y_train_fin)})
-    session.run(loss, feed_dict=train_feed_dict)
-    session.run(loss, feed_dict=valid_feed_dict)
-    # session.run(loss, feed_dict=test_feed_dict)
-    # biases_data = session.run(biases)
+test_feed_dict = {x: X_test_norm, y: y_test}
 
 # Define loss and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_conv, y))
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-# # optimizer = tf.train.AdamOptimizer(1e-4).minimize(cost)
-# Initializing the variables
-# init = tf.initialize_all_variables()
 
-# # Launch the graph
-# with tf.Session() as sess:
-#     sess.run(init)
-#     # Training cycle
-#     for epoch in range(training_epochs):
-#         total_batch = int(n_train_fin/batch_size)
-#         # Loop over all batches
-#         batch_in =0
-#         batch_fin = batch_size
-#         for i in range(total_batch):
-#             batch_x = X_train_fin[batch_in:batch_fin]
-#             batch_y = y_train_fin[batch_in:batch_fin]
-#             while (batch_fin+100) < len(y_train_fin):
-#               if (batch_fin+100) < len(y_train_fin):
-#                   batch_fin = batch_fin + 100
-#                   batch_in = batch_in + 100
-#               else:
-#                   batch_in = batch_in + 100
-#                   batch_fin = len(y_train_fin)
-#             # Run optimization op (backprop) and cost op (to get loss value)
-#               sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-#         # Display logs per epoch step
-#         if epoch % display_step == 0:
-#             c = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
-#             print("Epoch:", '%04d' % (epoch+1), "cost=", \
-#                 "{:.9f}".format(c))
-#     print("Optimization Finished!")
+# Train and Validation Cases
+with tf.Session() as session:
+    session.run(init)
+    session.run(cost, feed_dict=train_feed_dict)
+    session.run(cost, feed_dict=valid_feed_dict)
+    session.run(cost, feed_dict=test_feed_dict)
+    biases_data = session.run(biases)
 
-#     # Test model on validaation set:
-#     correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y, 1))
-#     # Calculate accuracy
-#     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-#     print("Validation Accuracy:", accuracy.eval({x: X_val, y: y_val}))
-
-##########
 
 is_correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 # Calculate the accuracy of the predictions
 accuracy = tf.reduce_mean(tf.cast(is_correct_prediction, tf.float32))
 
-import math
-from tqdm import tqdm
-
-epochs = 100
-batch_size = 100
-learning_rate = 0.11
-
-### DON'T MODIFY ANYTHING BELOW ###
-# Gradient Descent
-# optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)    
+optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
 # The accuracy measured against the validation set
 validation_accuracy = 0.0
@@ -224,7 +208,7 @@ with tf.Session() as session:
 
             # Run optimizer and get loss
             _, l = session.run(
-                [optimizer, loss],
+                [optimizer, cost],
                 feed_dict={x: batch_features, y: batch_labels})
 
             # Log every 50 batches
@@ -243,3 +227,47 @@ with tf.Session() as session:
         # Check accuracy against Validation data
         validation_accuracy = session.run(accuracy, feed_dict=valid_feed_dict)
 print('Validation accuracy at {}'.format(validation_accuracy))
+
+loss_plot = plt.subplot(211)
+loss_plot.set_title('Loss')
+loss_plot.plot(batches, loss_batch, 'g')
+loss_plot.set_xlim([batches[0], batches[-1]])
+acc_plot = plt.subplot(212)
+acc_plot.set_title('Accuracy')
+acc_plot.plot(batches, train_acc_batch, 'r', label='Training Accuracy')
+acc_plot.plot(batches, valid_acc_batch, 'b', label='Validation Accuracy')
+acc_plot.set_ylim([0, 1.0])
+acc_plot.set_xlim([batches[0], batches[-1]])
+acc_plot.legend(loc=4)
+plt.tight_layout()
+plt.show()
+
+# The accuracy measured against the Test set
+
+test_accuracy = 0.0
+
+with tf.Session() as session:
+    
+    session.run(init)
+    batch_count = int(math.ceil(len(X_train_fin)/batch_size))
+
+    for epoch_i in range(epochs):
+        
+        # Progress bar
+        batches_pbar = tqdm(range(batch_count), desc='Epoch {:>2}/{}'.format(epoch_i+1, epochs), unit='batches')
+        
+        # The training cycle
+        for batch_i in batches_pbar:
+            # Get a batch of training features and labels
+            batch_start = batch_i*batch_size
+            batch_features = X_train_fin[batch_start:batch_start + batch_size]
+            batch_labels = y_train_fin[batch_start:batch_start + batch_size]
+
+            # Run optimizer
+            _ = session.run(optimizer, feed_dict={x: batch_features, y: batch_labels})
+
+        # Check accuracy against Test data
+        test_accuracy = session.run(accuracy, feed_dict=test_feed_dict)
+
+
+print('Done! Test Accuracy is {}'.format(test_accuracy))
