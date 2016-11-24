@@ -1,2 +1,2 @@
-In this project, I use deep neural networks and convolutional neural networks to classify traffic signs. 
+In this project, I use deep neural networks to classify traffic signs. 
 I use TensorFlow to train a model so it can classify traffic signs from the German Traffic Sign Dataset.
