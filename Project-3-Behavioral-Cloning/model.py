@@ -3,6 +3,10 @@
 
 # with open('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #3 (Behavioral Cloning)/training_data','rb') as f:
 #     var = pickle.load(f)
+
+# images = var['features']
+# steering_angle = var['labels']
+
 import glob, os
 import cv2
 import numpy as np
@@ -15,7 +19,7 @@ path = '/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/P
 image_dict = []
 for i,infile in enumerate(glob.glob(os.path.join(path,'*.jpg'))):
     img = cv2.imread(infile)   
-    resized = scipy.misc.imresize(img, (100,200))      
+    resized = scipy.misc.imresize(img, (20,64))      
     # image_dict.append(img)
     image_dict.append(resized)
 
@@ -63,20 +67,10 @@ for i in steering_angle:
 #steering angle values as center+left+right:
 steering_angle = np.array(steering_angle + steering_angle_with_right + steering_angle_with_left)
 
-# images = var['features']
-# steering_angle = var['labels']
 images = image_dict
 steering_angle = steering_angle.astype(np.float32)
 
-# import numpy as np
-# import matplotlib.pyplot as plt
-# plt.imshow(images[0])
-# plt.show()
 
-# print(images.shape)
-# (8685, 100, 200, 3)
-# print(steering_angle.shape)
-# (8685, )
 from keras.utils import np_utils
 from sklearn.cross_validation import train_test_split
 X_train, X_val, y_train, y_val = train_test_split(images, steering_angle, test_size=0.33, random_state=42)
@@ -100,7 +94,7 @@ def myValGenerator():
       yield (X_val[i*32:(i+1)*32], y_val[i*32:(i+1)*32])
 
 from keras.models import Sequential
-from keras.layers import Dense, Activation, ELU, Lambda
+from keras.layers import Dense, Activation, ELU, Lambda, SpatialDropout2D
 from keras.layers import Dropout
 from keras.layers import Flatten
 from keras.constraints import maxnorm
@@ -129,7 +123,7 @@ import json
 # pool_size = (2, 2)
 # hidden_layers1 = 100
 # hidden_layers2 = 50
-fine_tune_mode = True
+fine_tune_mode = False
 
 # Load the existing model  & weights if we are fine tuning
 if fine_tune_mode:
@@ -145,24 +139,42 @@ if fine_tune_mode:
     model.summary()
 else:
   # Otherwise build a new CNN Network with Keras
-    learning_rate = 0.00001  #0.0001
+    learning_rate = 0.0001  #0.0001
+    # model = Sequential()
+    # model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(32, 16, 3)))
+    # # model.add(BatchNormalization(axis=1, input_shape=(100, 200, 3)))
+    # model.add(Convolution2D(24, 5, 5, border_mode='valid', subsample=(2,2), activation='relu'))
+    # model.add(Convolution2D(36, 5, 5, border_mode='valid', subsample=(2,2), activation='relu'))
+    # model.add(Convolution2D(48, 5, 5, border_mode='valid', subsample=(2,2), activation='relu'))
+    # model.add(SpatialDropout2D(0.5))
+    # model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu'))
+    # model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu'))
+    # model.add(Flatten())
+    # # model.add(Activation('relu'))
+    # model.add(Dense(100))
+    # # model.add(Dropout(.25))
+    # model.add(Activation('relu'))
+    # model.add(Dense(50))
+    # model.add(Activation('relu'))
+    # model.add(Dense(10))
+    # model.add(Activation('relu'))
+    # model.add(Dense(num_classes))
+
     model = Sequential()
-    model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(100, 200, 3)))
-    model.add(Convolution2D(24, 5, 5, border_mode='valid', subsample=(2,2), activation='relu'))
-    model.add(Convolution2D(36, 5, 5, border_mode='valid', subsample=(2,2), activation='relu'))
-    model.add(Convolution2D(48, 5, 5, border_mode='valid', subsample=(2,2), activation='relu'))
-    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu'))
-    model.add(Convolution2D(64, 3, 3, border_mode='valid', activation='relu'))
+    model.add(BatchNormalization(axis=1, input_shape=(20,64,3)))
+    model.add(Convolution2D(16, 3, 3, border_mode='valid', subsample=(2,2), activation='relu'))
+    model.add(Convolution2D(24, 3, 3, border_mode='valid', subsample=(1,1), activation='relu'))
+    model.add(Convolution2D(36, 3, 3, border_mode='valid', activation='relu'))
+    model.add(Convolution2D(48, 2, 2, border_mode='valid', activation='relu'))
+    model.add(Convolution2D(48, 2, 2, border_mode='valid', activation='relu'))
     model.add(Flatten())
-    model.add(Activation('relu'))
-    model.add(Dense(100))
-    model.add(Dropout(.25))
-    model.add(Activation('relu'))
-    model.add(Dense(50))
+    model.add(Dense(512))
+    model.add(Dropout(.5))
     model.add(Activation('relu'))
     model.add(Dense(10))
     model.add(Activation('relu'))
-    model.add(Dense(num_classes))
+    model.add(Dense(1))
+    model.summary()
 
 # model.add(BatchNormalization(axis=1, input_shape=(100, 200, 3)))
 # model.add(Convolution2D(24, 3, 3, border_mode='valid', subsample=(2,2), activation='relu'))
@@ -245,7 +257,7 @@ callback = EarlyStopping(monitor='val_loss', patience=2, verbose=1)
 
 model.fit(X_train,
         y_train,
-        nb_epoch=2,
+        nb_epoch=15,
         verbose=1,
         batch_size=128,
         shuffle=True,
