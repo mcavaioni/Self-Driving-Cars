@@ -41,32 +41,33 @@ df = pd.read_csv(csv_file)
 steering_angle = df['Steering Angle']
 # steering_angle = steering_angle.values.tolist()
 
-# # print(len(steering_angle))
+# print(len(steering_angle))
 # #2895
 
 # #modify steering angle from the center value in left images:
 # steering_angle_with_left=[]
 # for i in steering_angle:
 #   #if turning left (<0 value) => make softer turn so add value (negative becomes less negative; positive(right turn becomes bigger, harder turn))
-#   if i == 0 or i>0:
+#   if i == 0:# or i>0:
 #     steering_angle_with_left.append(i)
 #   else:
-#     left_img_i = i + 0.08
+#     left_img_i = i + 0.2
 #     steering_angle_with_left.append(left_img_i)
 
 # #modify steering angle from the center value in right images:
 # steering_angle_with_right=[]
 # for i in steering_angle:
 #   #subtract vaue to make smaller right turn value and more negative value for left turn:
-#   if i == 0 or i<0:
+#   if i == 0:# or i<0:
 #     steering_angle_with_right.append(i)
 #   else:
-#     right_img_i = i - 0.08
+#     right_img_i = i - 0.2
 #     steering_angle_with_right.append(right_img_i)
 
-# #steering angle values as center+left+right:
+
+# # #steering angle values as center+left+right:
 # steering_angle = np.array(steering_angle  + steering_angle_with_left + steering_angle_with_right)
-steering_angle = np.concatenate((steering_angle, (steering_angle - .12), (steering_angle + .12)))
+steering_angle = np.concatenate((steering_angle, (steering_angle + .15), (steering_angle - .15)))
 
 images = image_dict
 steering_angle = steering_angle.astype(np.float32)
@@ -127,6 +128,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.models import model_from_json
 import json
+from keras.regularizers import l1, l2
 # num_filters1 = 24
 # filter_size1 = 5
 # stride1=(2,2)
@@ -145,11 +147,13 @@ import json
 # pool_size = (2, 2)
 # hidden_layers1 = 100
 # hidden_layers2 = 50
-fine_tune_mode = False
+L2_WEIGHT = 0.00001
+
+fine_tune_mode = True   
 
 # Load the existing model  & weights if we are fine tuning
 if fine_tune_mode:
-    learning_rate = 0.00001
+    learning_rate = 0.0001 #0.0000001  - 0.0001
     print("Running in FINE-TUNE mode!")
     with open("model.json", 'r') as jfile:
         model = model_from_json(json.load(jfile))
@@ -162,22 +166,64 @@ if fine_tune_mode:
 else:
   # Otherwise build a new CNN Network with Keras
     learning_rate = 0.0001  #0.0001
+  #   model = Sequential()
+  #   model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(20, 64, 3)))
+
+  #   model.add(Convolution2D(16, 3, 3,
+  #                         border_mode='valid'))
+  # # Applying ReLU
+  #   model.add(Activation('relu'))
+  # # The second conv layer will convert 16 channels into 8 channels
+  #   model.add(Convolution2D(8, 3, 3))
+  # # Applying ReLU
+  #   model.add(Activation('relu'))
+  # # The second conv layer will convert 8 channels into 4 channels
+  #   model.add(Convolution2D(4, 3, 3))
+  # # Applying ReLU
+  #   model.add(Activation('relu'))
+  # # The second conv layer will convert 4 channels into 2 channels
+  #   model.add(Convolution2D(2, 3, 3))
+  # # Applying ReLU
+  #   model.add(Activation('relu'))
+  # # Apply Max Pooling for each 2 x 2 pixels
+  #   model.add(MaxPooling2D(pool_size=(2, 2)))
+  # # Apply dropout of 25%
+  #   model.add(Dropout(0.25))
+
+  # # Flatten the matrix. The input has size of 360
+  #   model.add(Flatten())
+  # # Input 360 Output 16
+  #   model.add(Dense(16))
+  # # Applying ReLU
+  #   model.add(Activation('relu'))
+  # # Input 16 Output 16
+  #   model.add(Dense(16))
+  # # Applying ReLU
+  #   model.add(Activation('relu'))
+  # # Input 16 Output 16
+  #   model.add(Dense(16))
+  # # Applying ReLU
+  #   model.add(Activation('relu'))
+  # # Apply dropout of 50%
+  #   model.add(Dropout(0.5))
+  # # Input 16 Output 1
+  #   model.add(Dense(1))
 
     model = Sequential()
     model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(20, 64, 3)))
     # model.add(BatchNormalization(axis=1, input_shape=(20,64,3)))
-    model.add(Convolution2D(16, 3, 3, border_mode='valid', subsample=(2,2), activation='relu'))
-    model.add(Convolution2D(24, 3, 3, border_mode='valid', subsample=(1,1), activation='relu'))
-    model.add(Convolution2D(36, 3, 3, border_mode='valid', activation='relu'))
+    model.add(Convolution2D(24, 3, 3, border_mode='valid', subsample=(2,2), activation='relu'))
+    model.add(Convolution2D(36, 3, 3, border_mode='valid', subsample=(1,1), activation='relu'))
+    model.add(Convolution2D(48, 3, 3, border_mode='valid', activation='relu'))
     # model.add(SpatialDropout2D(0.2))
-    model.add(Convolution2D(48, 2, 2, border_mode='valid', activation='relu'))
-    model.add(Convolution2D(48, 2, 2, border_mode='valid', activation='relu'))
+    model.add(Convolution2D(64, 2, 2, border_mode='valid', activation='relu'))
+    model.add(Convolution2D(64, 2, 2, border_mode='valid', activation='relu'))
     model.add(Flatten())
     model.add(Dense(512))
-    # model.add(Activation('relu'))
+    model.add(Activation('relu'))
     model.add(Dropout(.2))
     model.add(Activation('relu'))
-    # model.add(Dense(50))
+    # model.add(Dense(50, W_regularizer=l2(L2_WEIGHT)))
     # model.add(Activation('relu'))
     model.add(Dense(10))
     model.add(Activation('relu'))
