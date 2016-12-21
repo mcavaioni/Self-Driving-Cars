@@ -92,7 +92,7 @@ Then again an activation LeakyRELU function and a dropout layer, prior to the fi
 
 The model parameters result as:
 
-![alt tag](https://cloud.githubusercontent.com/assets/13647664/21406075/b94b5806-c797-11e6-9571-6aff694a7d2c.png)
+![alt tag](https://github.com/mcavaioni/Self-Driving-Cars/issues/2)
 
 
 I used Adam optimizer and I tried different learning rates, but eventually I kept the standard one (lr=0.002).
@@ -102,6 +102,8 @@ I used the 7th epoch, which also resulted having the lowest value of mean square
 <br>
 <img width="561" alt="screen shot 2016-12-21 at 2 16 36 pm" src="https://cloud.githubusercontent.com/assets/13647664/21406366/40f3de3a-c799-11e6-9ac6-9f7cb3eae549.png">
 </br>
+
+https://github.com/mcavaioni/Self-Driving-Cars/issues/2
 
 Although this model and weights were the best of a bunch, the car was not performing properly, meaning it was failing to approach the first right hand curve of the track (while instead going smoothly for the rest of it).
 I tried running different epochs on the same initial dataset, but I ended up moving to the following step: fine-tuning.
