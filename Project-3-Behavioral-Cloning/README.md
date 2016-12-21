@@ -122,3 +122,14 @@ Also augmentation in this case was really helpful.
 I worked on this project mostly using my CPU, but it revealed to be very inefficient. There are a lot of things that need to be adjusted and you want to try several options. Having to wait minutes for training the network is very frustrating.
 After few days I got my AWS set up and used the GPU which was very fast and very efficient in making progress and in removing frustration.
 Finally, fine-tuning is definitely really tricky. In my case it worked best when I gathered few images on the specific area of the track where the car was going off road. Also I tried to put the car in the same position where it was heading and I started recording the new images from there, adjusting immediately the steering angle towards the center lane.
+
+______________
+
+<i>Files used:</i><br>
+
+<b>model.py</b> - The script used to create and train the model. <br>
+<b>drive.py</b> - The script to drive the car.<br>
+<b>model.json</b> - The model architecture.<br>
+<b>model.h5</b> - The model weights.<br>
+
+
