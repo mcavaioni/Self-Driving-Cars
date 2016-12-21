@@ -1,10 +1,10 @@
 Udacity Self-Driving Car Project 3: Behavioral Cloning
 
-PROBLEM: <br>
+<b>PROBLEM:</b> <br>
 Use Behavioral Cloning to train a Convolutional Neural Network model with Keras, to drive a car in a simulator.
 
 
-SOLUTION:<br>
+<b>SOLUTION:</b><br>
 The problem was approached in these steps:<br>
 1- gather data (images and steering angle values)<br>
 2- analyze and modify the images and related steering angles<br>
