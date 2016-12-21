@@ -1,23 +1,23 @@
 Udacity Self-Driving Car Project 3: Behavioral Cloning
 
-PROBLEM:
+PROBLEM: <br>
 Use Behavioral Cloning to train a Convolutional Neural Network model with Keras, to drive a car in a simulator.
 
 
-SOLUTION:
-The problem was approached in these steps:
-1- gather data (images and steering angle values)
-2- analyze and modify the images and related steering angles
-3- create several Convolutional Neural Networks and choose the best one
-4- fine-tune the model (if needed)
+SOLUTION:<br>
+The problem was approached in these steps:<br>
+1- gather data (images and steering angle values)<br>
+2- analyze and modify the images and related steering angles<br>
+3- create several Convolutional Neural Networks and choose the best one<br>
+4- fine-tune the model (if needed)<br>
 
-1- DATA:
+1- DATA:<br>
 Initially I used to drive around the car in the simulator in “training mode” to collect data (images and values). I made several attempts but the keyboard’s response was most of the time very abrupt, creating not good data.
 The approach was to drive smoothly for a couple of laps and then record “recovery actions”, teaching the car how to recover in case of going off the road.
 Eventually Udacity provided a training dataset and I decided to use that one in order to mitigate any risk of feeding bad data. A joystick would have been a good solution as well.
 
 
-2- IMAGE PREPROCESSING and LABELS AUGMENTATION:
+2- IMAGE PREPROCESSING and LABELS AUGMENTATION:<br>
 The images from the simulators have size (160x320) pixels, which are a bit big to be handled in big quantities.
 Additionally some areas of the image were not useful and would have created more noise, “distracting” the network. 
 That’s why I decided to crop the top of the image and a bit of the button portion. I tried several options, but I finally settled with cropping the height to [32:135] and keeping the full width [0:320].
@@ -33,7 +33,7 @@ The value I used has been modified several times. I started with a more “gentl
 Finally the images and labels are split in training and validation sets. The test is performed running the simulator on the track in autonomous mode.
 The test needed to be repeated several times as it’s described in the section 4.
 
-3- CONVOLUTIONAL NEURAL NETWORK:
+3- CONVOLUTIONAL NEURAL NETWORK:<br>
 I tried different model architectures. Initially I took inspiration from the NVIDIA model which had a network consisting of 9 layers, including a normalization layer, 5 convolutional layers
 and 3 fully connected layers.
 I had to adjust the kernel sizes and the strides in the convolutional layers since I was using smaller image sizes. (i.e. instead of kernel 5x5 with 2x2 strides I had 3x3 kernels with 2x2 strides in the first convolutional layer and then 3x3 kernel with 1x1 studies for the following ones). 
@@ -105,7 +105,7 @@ Although this model and weights were the best of a bunch, the car was not perfor
 I tried running different epochs on the same initial dataset, but I ended up moving to the following step: fine-tuning.
 
 
-4- FINE TUNING:
+4- FINE TUNING:<br>
 Fine-tuning revealed to be very tricky. 
 The approach was this one: use the model and weights saved during training and recompile and train the model with new data taken from the spot where the car failed to perform. 
 So I ran the car in that curve and gathered these new images. I made several attempts as sometimes the new data was either not improving the performance or further degrading it.
@@ -114,7 +114,7 @@ I had hard time fine-tuning initially as I was using a very low learning rate. I
 The fine tuning was hard as many factors could influence it: new training data, number of epochs, learning rate.
 
 
-CONCLUSIONS:
+CONCLUSIONS:<br>
 Training data are key to a good performance but are not all. The network architecture is also relevant, although sometimes it’s hard to arrive to a “final” model. Creating a network is an art and a science. I used several networks for different projects and I certainly realized that a network performing well on a dataset is not certain to do the same on a different one.
 It’s very important to preprocess data. I worked on a project for image recognition of the SVHN dataset and even there I experienced the importance of feeding “clean” data to the network.
 In this case, cropping the images was definitely impactful, as it removed a lot of noise.
