@@ -98,7 +98,7 @@ I used Adam optimizer and I tried different learning rates, but eventually I kep
 The network was run on several epochs, but I made sure to print the resulting model and weights for each epoch in order to test the performance.
 I used the 7th epoch, which also resulted having the lowest value of mean squared error.
 
-XXXX
+![Alt text](https://cloud.githubusercontent.com/assets/13647664/21406366/40f3de3a-c799-11e6-9ac6-9f7cb3eae549.png)
 
 
 Although this model and weights were the best of a bunch, the car was not performing properly, meaning it was failing to approach the first right hand curve of the track (while instead going smoothly for the rest of it).
