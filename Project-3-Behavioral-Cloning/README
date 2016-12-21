@@ -92,7 +92,7 @@ Then again an activation LeakyRELU function and a dropout layer, prior to the fi
 
 The model parameters result as:
 
-<img width="713" alt="screen shot 2016-12-21 at 2 23 09 pm" src="https://cloud.githubusercontent.com/assets/13647664/21406075/b94b5806-c797-11e6-9571-6aff694a7d2c.png">
+![alt tag] (https://cloud.githubusercontent.com/assets/13647664/21406075/b94b5806-c797-11e6-9571-6aff694a7d2c.png)
 
 
 I used Adam optimizer and I tried different learning rates, but eventually I kept the standard one (lr=0.002).
