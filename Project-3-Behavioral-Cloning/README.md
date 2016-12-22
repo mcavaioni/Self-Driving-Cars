@@ -41,7 +41,7 @@ I had to adjust the kernel sizes and the strides in the convolutional layers sin
 This network did not give me promising results so I modified it to the following:
 
     model = Sequential()
-    model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(20, 64, 3)))
+    model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(32, 64, 3)))
     model.add(Convolution2D(24, 3, 3, border_mode='valid', subsample=(2,2), activation='relu'))
     model.add(Convolution2D(36, 3, 3, border_mode='valid', subsample=(1,1), activation='relu'))
     model.add(Convolution2D(48, 3, 3, border_mode='valid', activation='relu'))
