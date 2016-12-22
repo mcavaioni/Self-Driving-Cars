@@ -32,7 +32,7 @@ The value I used has been modified several times. I started with a more “gentl
  To create additional data and to avoid the bias on the left turn (as most the track steers to the left) I added mirror images (with corresponding mirrored steering angle, multiplying the value by -1).
 Finally the images and labels are split in training and validation sets. The test is performed running the simulator on the track in autonomous mode.
 The test needed to be repeated several times as it’s described in the section 4.
-Ultimately the images and steering angle value are fed to the network in batches, through the use of a generator.
+Ultimately the images and steering angle value are fed to the network in batches, through the use of a generator (which allowed to load the data in batches instead of laoding all of them into memory).
 
 3- CONVOLUTIONAL NEURAL NETWORK:<br>
 I tried different model architectures. Initially I took inspiration from the NVIDIA model which had a network consisting of 9 layers, including a normalization layer, 5 convolutional layers
