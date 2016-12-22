@@ -32,6 +32,7 @@ The value I used has been modified several times. I started with a more “gentl
  To create additional data and to avoid the bias on the left turn (as most the track steers to the left) I added mirror images (with corresponding mirrored steering angle, multiplying the value by -1).
 Finally the images and labels are split in training and validation sets. The test is performed running the simulator on the track in autonomous mode.
 The test needed to be repeated several times as it’s described in the section 4.
+Ultimately the images and steering angle value are fed to the network in batches, through the use of a generator.
 
 3- CONVOLUTIONAL NEURAL NETWORK:<br>
 I tried different model architectures. Initially I took inspiration from the NVIDIA model which had a network consisting of 9 layers, including a normalization layer, 5 convolutional layers
@@ -122,6 +123,9 @@ Also augmentation in this case was really helpful.
 I worked on this project mostly using my CPU, but it revealed to be very inefficient. There are a lot of things that need to be adjusted and you want to try several options. Having to wait minutes for training the network is very frustrating.
 After few days I got my AWS set up and used the GPU which was very fast and very efficient in making progress and in removing frustration.
 Finally, fine-tuning is definitely really tricky. In my case it worked best when I gathered few images on the specific area of the track where the car was going off road. Also I tried to put the car in the same position where it was heading and I started recording the new images from there, adjusting immediately the steering angle towards the center lane.
+
+A VIDEO of the Autonomous driving mode can be seen here:<br>
+[![Autonomous driving](http://img.youtube.com/vi/cdMVPxF6kw4/0.jpg)](http://www.youtube.com/watch?v=cdMVPxF6kw4)
 
 ______________
 
