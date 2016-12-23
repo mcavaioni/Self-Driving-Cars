@@ -33,7 +33,7 @@ for fname in images:
 #calibrate the camera
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-# img = mpimg.imread(images[0])
+# img = mpimg.imread(path+'/test_images/test4.jpg')
 # plt.imshow(img)
 # plt.show()
 
