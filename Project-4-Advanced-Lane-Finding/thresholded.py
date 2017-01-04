@@ -178,13 +178,25 @@ def lines_pixels(img):
       right_lane_y.append(y_val)
       previous = x_val
           
-  left_lane = (left_lane_x,left_lane_y)
-  right_lane = (right_lane_x,right_lane_y)
 
   plt.imshow(img)
   plt.plot(left_lane_x, left_lane_y, 'o', color='yellow')
-  plt.plot(right_lane_x, right_lane_y, 'o', color = 'green')
+  plt.plot(right_lane_x, right_lane_y, 'o', color = 'blue')
+  
+
+  #fit polynomial on the left:
+  left_lane_y = np.array(left_lane_y)
+  left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
+  left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]
+  plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
+
+  #fit polynomial on the right:
+  right_lane_y = np.array(right_lane_y)
+  right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
+  right_fitx = right_fit[0]*right_lane_y**2 + right_fit[1]*right_lane_y + right_fit[2]
+  plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
   plt.show()
 
 lines_pixels(warped_img)
+# plt.show()
 
