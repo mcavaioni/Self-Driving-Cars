@@ -285,7 +285,7 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
 
 # for i in images:
   # image = i
-image = images[0]
+image = images[5]
 image = mpimg.imread(image)
 #apply distortion correction to the raw image
 img = cv2.undistort(image, mtx, dist, None, mtx)
