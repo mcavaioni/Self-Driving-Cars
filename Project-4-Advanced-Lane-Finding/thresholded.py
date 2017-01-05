@@ -133,7 +133,7 @@ def warp(img):
                     [1150,720]])
 
   M = cv2.getPerspectiveTransform(src,dst)
-  warped = cv2.warpPerspective(img, M, img_size)#, flags = cv2.INTER_LINEAR)
+  warped = cv2.warpPerspective(img, M, img_size, flags = cv2.INTER_LINEAR)
   return warped
 
 
@@ -195,32 +195,43 @@ def lines_pixels(img):
           
   #plot the pixels:
   plt.imshow(img)
-  plt.plot(left_lane_x, left_lane_y, 'o', color='yellow')
-  plt.plot(right_lane_x, right_lane_y, 'o', color = 'blue')
+  # plt.plot(left_lane_x, left_lane_y, 'o', color='yellow')
+  # plt.plot(right_lane_x, right_lane_y, 'o', color = 'blue')
   
 
   #fit polynomial on the left:
   left_lane_y = np.array(left_lane_y)
+  left_lane_x = np.array(left_lane_x)
   left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
   left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]
-  plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
+  # plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
 
   #fit polynomial on the right:
   right_lane_y = np.array(right_lane_y)
+  right_lane_x = np.array(right_lane_x)
   right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
   right_fitx = right_fit[0]*right_lane_y**2 + right_fit[1]*right_lane_y + right_fit[2]
-  plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
-  plt.show()
+  # plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
+  # plt.show()
 
-  return left_lane_y, left_fitx, right_fitx, left_fit, right_fit
+  return left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx
 
-def radius(left_lane_y, left_fit, right_fit):
-  y_eval = np.max(left_lane_y)
-  left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) \
-                               /np.absolute(2*left_fit[0])
-  right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) \
-                                  /np.absolute(2*right_fit[0])
-  print(left_curverad, right_curverad)  
+def radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y):
+  ym_per_pix = 30.0/720.0
+  xm_per_pix = 3.7/700.0
+
+  y_eval_left = np.max(left_lane_y)
+  y_eval_right = np.max(right_lane_y)
+  left_fit_cr = np.polyfit(left_lane_y*ym_per_pix, left_lane_x*xm_per_pix, 2)
+  right_fit_cr = np.polyfit(right_lane_y*ym_per_pix, right_lane_x*xm_per_pix, 2)
+
+  left_curverad = ((1 + (2*left_fit_cr[0]*y_eval_left + left_fit_cr[1])**2)**1.5) \
+                             /np.absolute(2*left_fit_cr[0])
+
+  right_curverad = ((1 + (2*right_fit_cr[0]*y_eval_right + right_fit_cr[1])**2)**1.5) \
+                                /np.absolute(2*right_fit_cr[0])
+
+  print(left_curverad, "m", right_curverad, "m")
 
 # def mask(img):
 #   '''
@@ -243,23 +254,52 @@ def radius(left_lane_y, left_fit, right_fit):
 #   return masked_image
 
 
-for i in images:
-  # image = i
-  image = i
-  image = mpimg.imread(image)
-  #apply distortion correction to the raw image
-  img = cv2.undistort(image, mtx, dist, None, mtx)
-  # thresholded = thres_img(img)
-  # masked = mask(thresholded)
-  # plt.imshow(img)
-  warped_img = warp(img)
-  thresholded = thres_img(warped_img)
-  # plt.show()
-  # plt.imshow(warped_img, cmap='gray')
-  # histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
-  # plt.plot(histogram)
-  # plt.imshow(warped_img)
-  left_lane_y, left_fitx, right_fitx, left_fit, right_fit = lines_pixels(thresholded)
-  radius(left_lane_y, left_fit, right_fit)
-  plt.show()
+def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y):
+  # Create an image to draw the lines on
+  warp_zero = np.zeros_like(warped_img).astype(np.uint8)
+  color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
+  # Recast the x and y points into usable format for cv2.fillPoly()
+  pts_left = np.array([np.transpose(np.vstack([left_fitx, left_lane_y]))])
+  pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, right_lane_y])))])
+  pts = np.hstack((pts_left, pts_right))
+
+
+  # Draw the lane onto the warped blank image
+  cv2.fillPoly(color_warp, np.int_([pts]), (0,255,0))
+  src = np.float32([[240,720],
+                    [575,460],
+                    [715,460],
+                    [1150,720]])
+
+  dst = np.float32([[240,720],
+                    [240,0],
+                    [1150,0],
+                    [1150,720]])
+  Minv = cv2.getPerspectiveTransform(dst, src)
+  # Warp the blank back to original image space using inverse perspective matrix (Minv)
+  newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0])) 
+  # Combine the result with the original image
+  result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
+  plt.imshow(result)
+
+# for i in images:
+  # image = i
+image = images[0]
+image = mpimg.imread(image)
+#apply distortion correction to the raw image
+img = cv2.undistort(image, mtx, dist, None, mtx)
+thresholded = thres_img(img)
+# masked = mask(thresholded)
+# plt.imshow(img)
+warped_img = warp(thresholded)
+# thresholded = thres_img(warped_img)
+# plt.show()
+# plt.imshow(warped_img, cmap='gray')
+# histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
+# plt.plot(histogram)
+# plt.imshow(warped_img)
+left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx = lines_pixels(warped_img)
+radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
+draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y)
+plt.show()  
