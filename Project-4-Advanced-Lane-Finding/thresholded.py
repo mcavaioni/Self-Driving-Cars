@@ -203,6 +203,7 @@ def lines_pixels(img):
   left_lane_y = np.array(left_lane_y)
   left_lane_x = np.array(left_lane_x)
   left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
+
   #extend the line to the border of the image
   for i in reversed(range(0,left_lane_y[-1])):
     left_lane_y = np.append(left_lane_y, i+1)
@@ -215,6 +216,7 @@ def lines_pixels(img):
   right_lane_y = np.array(right_lane_y)
   right_lane_x = np.array(right_lane_x)
   right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
+
   #extend the line to the border of the image
   for i in reversed(range(0,right_lane_y[-1])):
     right_lane_y = np.append(right_lane_y, i+1)
@@ -224,16 +226,25 @@ def lines_pixels(img):
   plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
   plt.show()
 
-  return left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx
+  #find position of the car at the end of the y lane (closed to bottom of image)
+  right_fitx_position = right_fit[0]*715**2 + right_fit[1]*715 + right_fit[2]
+  left_fitx_position = left_fit[0]*715**2 + left_fit[1]*715 + left_fit[2]
+  middle_lane = left_fitx_position + (right_fitx_position - left_fitx_position)/2
+  
+  car_position = (640-middle_lane)*(3.7/700)
+  
 
-def radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y):
+  return left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position
+
+def radius(left_fitx, left_lane_y, right_fitx, right_lane_y):
+  #use left_lane_x, right_lane_x afterwards (instead of left_fitx, right_fitx)
   ym_per_pix = 30.0/720.0
   xm_per_pix = 3.7/700.0
 
   y_eval_left = np.max(left_lane_y)
   y_eval_right = np.max(right_lane_y)
-  left_fit_cr = np.polyfit(left_lane_y*ym_per_pix, left_lane_x*xm_per_pix, 2)
-  right_fit_cr = np.polyfit(right_lane_y*ym_per_pix, right_lane_x*xm_per_pix, 2)
+  left_fit_cr = np.polyfit(left_lane_y*ym_per_pix, left_fitx*xm_per_pix, 2)
+  right_fit_cr = np.polyfit(right_lane_y*ym_per_pix, right_fitx*xm_per_pix, 2)
 
   left_curverad = ((1 + (2*left_fit_cr[0]*y_eval_left + left_fit_cr[1])**2)**1.5) \
                              /np.absolute(2*left_fit_cr[0])
@@ -241,7 +252,7 @@ def radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y):
   right_curverad = ((1 + (2*right_fit_cr[0]*y_eval_right + right_fit_cr[1])**2)**1.5) \
                                 /np.absolute(2*right_fit_cr[0])
 
-  print(left_curverad, "m", right_curverad, "m")
+  return left_curverad, right_curverad
 
 # def mask(img):
 #   '''
@@ -293,9 +304,16 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
   result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
   plt.imshow(result)
 
+  cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  if car_position<0:
+    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  else:
+    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+
 # for i in images:
   # image = i
-image = images[0]
+image = images[5]
 image = mpimg.imread(image)
 #apply distortion correction to the raw image
 img = cv2.undistort(image, mtx, dist, None, mtx)
@@ -309,7 +327,7 @@ warped_img = warp(thresholded)
 # histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
 # plt.plot(histogram)
 # plt.imshow(warped_img)
-left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx = lines_pixels(warped_img)
-# radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
+left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
 draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y)
 plt.show()  
