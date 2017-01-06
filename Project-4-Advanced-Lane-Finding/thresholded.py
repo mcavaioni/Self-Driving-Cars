@@ -302,7 +302,6 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
   newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0])) 
   # Combine the result with the original image
   result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
-  # plt.imshow(result)
 
   cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
@@ -311,11 +310,10 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
   else:
     cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   
-  # return result
+  return result
 
-  
-# for i in images:
-  # image = i
+###########################
+#for single image:
 image = images[5]
 image = mpimg.imread(image)
 #apply distortion correction to the raw image
@@ -334,6 +332,7 @@ left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car
 left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
 draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y)
 # plt.show() 
+#############################
 
 def pipeline(image):
   # image = mpimg.imread(image)
@@ -342,8 +341,42 @@ def pipeline(image):
   warped_img = warp(thresholded)
   left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
   left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
-  result = draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y)
+  warp_zero = np.zeros_like(warped_img).astype(np.uint8)
+  color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
+
+  # Recast the x and y points into usable format for cv2.fillPoly()
+  pts_left = np.array([np.transpose(np.vstack([left_fitx, left_lane_y]))])
+  pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, right_lane_y])))])
+  pts = np.hstack((pts_left, pts_right))
+
+
+  # Draw the lane onto the warped blank image
+  cv2.fillPoly(color_warp, np.int_([pts]), (0,255,0))
+  src = np.float32([[240,720],
+                    [575,460],
+                    [715,460],
+                    [1150,720]])
+
+  dst = np.float32([[240,720],
+                    [240,0],
+                    [1150,0],
+                    [1150,720]])
+  Minv = cv2.getPerspectiveTransform(dst, src)
+  # Warp the blank back to original image space using inverse perspective matrix (Minv)
+  newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0])) 
+  # Combine the result with the original image
+  result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
+
+  cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  if car_position<0:
+    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  else:
+    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  
   return result
+
+  
 
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
