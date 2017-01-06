@@ -203,8 +203,11 @@ def lines_pixels(img):
   left_lane_y = np.array(left_lane_y)
   left_lane_x = np.array(left_lane_x)
   left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
-
-  # left_lane_y = np.append(left_lane_y, 720)
+  #extend the line to the border of the image
+  for i in reversed(range(0,left_lane_y[-1])):
+    left_lane_y = np.append(left_lane_y, i+1)
+  for i in range(left_lane_y[0], 720):
+    left_lane_y = np.insert(left_lane_y, 0, i+1)
   left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]
   plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
 
@@ -212,10 +215,14 @@ def lines_pixels(img):
   right_lane_y = np.array(right_lane_y)
   right_lane_x = np.array(right_lane_x)
   right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
+  #extend the line to the border of the image
+  for i in reversed(range(0,right_lane_y[-1])):
+    right_lane_y = np.append(right_lane_y, i+1)
+  for i in range(right_lane_y[0], 720):
+    right_lane_y = np.insert(right_lane_y, 0, i+1)
   right_fitx = right_fit[0]*right_lane_y**2 + right_fit[1]*right_lane_y + right_fit[2]
   plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
   plt.show()
-  print(left_lane_y)
 
   return left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx
 
@@ -288,7 +295,7 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
 
 # for i in images:
   # image = i
-image = images[5]
+image = images[0]
 image = mpimg.imread(image)
 #apply distortion correction to the raw image
 img = cv2.undistort(image, mtx, dist, None, mtx)
