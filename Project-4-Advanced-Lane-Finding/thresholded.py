@@ -194,7 +194,7 @@ def lines_pixels(img):
       previous = x_val
           
   #plot the pixels:
-  plt.imshow(img)
+  # plt.imshow(img)
   # plt.plot(left_lane_x, left_lane_y, 'o', color='yellow')
   # plt.plot(right_lane_x, right_lane_y, 'o', color = 'blue')
   
@@ -210,7 +210,7 @@ def lines_pixels(img):
   for i in range(left_lane_y[0], 720):
     left_lane_y = np.insert(left_lane_y, 0, i+1)
   left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]
-  plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
+  # plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
 
   #fit polynomial on the right:
   right_lane_y = np.array(right_lane_y)
@@ -223,8 +223,8 @@ def lines_pixels(img):
   for i in range(right_lane_y[0], 720):
     right_lane_y = np.insert(right_lane_y, 0, i+1)
   right_fitx = right_fit[0]*right_lane_y**2 + right_fit[1]*right_lane_y + right_fit[2]
-  plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
-  plt.show()
+  # plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
+  # plt.show()
 
   #find position of the car at the end of the y lane (closed to bottom of image)
   right_fitx_position = right_fit[0]*715**2 + right_fit[1]*715 + right_fit[2]
@@ -302,7 +302,7 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
   newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0])) 
   # Combine the result with the original image
   result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
-  plt.imshow(result)
+  # plt.imshow(result)
 
   cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
@@ -310,7 +310,10 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
     cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   else:
     cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  
+  # return result
 
+  
 # for i in images:
   # image = i
 image = images[5]
@@ -330,4 +333,21 @@ warped_img = warp(thresholded)
 left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
 left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
 draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y)
-plt.show()  
+# plt.show() 
+
+def pipeline(image):
+  # image = mpimg.imread(image)
+  img = cv2.undistort(image, mtx, dist, None, mtx)
+  thresholded = thres_img(img)  
+  warped_img = warp(thresholded)
+  left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+  left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
+  result = draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y)
+  return result
+
+from moviepy.editor import VideoFileClip
+from IPython.display import HTML
+vid_output = 'project_video_out.mp4'
+clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/project_video.mp4')
+vid_clip = clip1.fl_image(pipeline) 
+vid_clip.write_videofile(vid_output, audio=False)
