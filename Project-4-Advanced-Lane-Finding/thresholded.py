@@ -73,7 +73,7 @@ def thres_img(img):
   # plt.imshow(color_binary)
   # plt.show()
 
-  #luv:
+  #luv: (better for white lanes)
   luv = cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
   l_channel = luv[:,:,0]
   l_thresh_min = 220
@@ -83,7 +83,7 @@ def thres_img(img):
   # plt.imshow(l_binary, cmap = 'gray')
   # plt.show()
 
-  #lab:
+  #lab: (better for yellow lanes)
   lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
   lab_channel = luv[:,:,2]
   lab_thresh_min = 180
@@ -96,9 +96,9 @@ def thres_img(img):
   #combine the two binary thresholds
   combined_binary = np.zeros_like(l_binary)
   combined_binary[(lab_binary == 1) | (l_binary == 1) ] = 1
-  return combined_binary
   # plt.imshow(combined_binary, cmap='gray')
   # plt.show()
+  return combined_binary
 
 
 
@@ -205,10 +205,11 @@ def lines_pixels(img):
   left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
 
   #extend the line to the border of the image
-  for i in reversed(range(0,left_lane_y[-1])):
-    left_lane_y = np.append(left_lane_y, i+1)
+  # for i in reversed(range(0,left_lane_y[-1])):
+  #   left_lane_y = np.append(left_lane_y, i+1)
   for i in range(left_lane_y[0], 720):
     left_lane_y = np.insert(left_lane_y, 0, i+1)
+
   left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]
   # plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
 
@@ -218,10 +219,11 @@ def lines_pixels(img):
   right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
 
   #extend the line to the border of the image
-  for i in reversed(range(0,right_lane_y[-1])):
-    right_lane_y = np.append(right_lane_y, i+1)
+  # for i in reversed(range(0,right_lane_y[-1])):
+  #   right_lane_y = np.append(right_lane_y, i+1)
   for i in range(right_lane_y[0], 720):
     right_lane_y = np.insert(right_lane_y, 0, i+1)
+
   right_fitx = right_fit[0]*right_lane_y**2 + right_fit[1]*right_lane_y + right_fit[2]
   # plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
   # plt.show()
@@ -306,11 +308,11 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
   cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   if car_position<0:
-    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+    cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   else:
-    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+    cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   
-  return result
+  # plt.imshow(result)
 
 ###########################
 #for single image:
@@ -334,13 +336,28 @@ draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_la
 # plt.show() 
 #############################
 
+#VIDEO:
+frame_count = 0
 def pipeline(image):
+  global frame_count
   # image = mpimg.imread(image)
   img = cv2.undistort(image, mtx, dist, None, mtx)
   thresholded = thres_img(img)  
   warped_img = warp(thresholded)
+
+
+  if frame_count == 1:
+    plt.imshow(warped_img)
+    plt.show()
+    x_all = np.nonzero(warped_img)
+    print((x_all))
+
+    return
+
   left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
   left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
+
+
   warp_zero = np.zeros_like(warped_img).astype(np.uint8)
   color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
@@ -370,13 +387,14 @@ def pipeline(image):
   cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   if car_position<0:
-    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+    cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   else:
-    cv2.putText(result, "Car is on the left of: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  
+    cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+ 
+  frame_count +=1
   return result
 
-  
+
 
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
