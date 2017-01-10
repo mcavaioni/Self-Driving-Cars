@@ -25,6 +25,59 @@ dist = calibration.dist
 # plt.imshow(gray, cmap= 'gray')
 # plt.show()
 # print(img.shape)
+def mag_thresh(img, sobel_kernel=3, mag_thresh=(10, 200)):
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
+    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
+    abs_sobelxy = np.sqrt(sobelx**2 + sobely**2)
+    scaled_sobel = np.uint8(255*abs_sobelxy/np.max(abs_sobelxy))
+    mag_binary = np.zeros_like(scaled_sobel)
+    mag_binary[(scaled_sobel>=mag_thresh[0]) & (scaled_sobel<=mag_thresh[1])]=1
+    return mag_binary
+
+def abs_sobel_thresh(img, orient='x', sobel_kernel=3, thresh=(10, 50)):
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    if orient == 'x':
+      sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
+      abs_sobelx = np.absolute(sobelx)
+      scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
+    else:
+      sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
+      abs_sobely = np.absolute(sobely)
+      scaled_sobel = np.uint8(255*abs_sobely/np.max(abs_sobely))        
+    grad_binary = np.zeros_like(scaled_sobel)
+    grad_binary[(scaled_sobel >= thresh[0]) & (scaled_sobel<=thresh[1])]=1
+    return grad_binary   
+
+def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
+    '''
+    explores the direction, or orientation, of the gradient
+    '''
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
+    abs_sobelx = np.absolute(sobelx)
+    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
+    abs_sobely = np.absolute(sobely)
+    grad_dir = np.arctan2(abs_sobely, abs_sobelx)
+    dir_binary = np.zeros_like(grad_dir)
+    dir_binary[(grad_dir>=thresh[0])&(grad_dir<=thresh[1])]=1
+    return dir_binary    
+
+
+# image = images[0]
+# image = mpimg.imread(image)
+# #apply distortion correction to the raw image
+# img = cv2.undistort(image, mtx, dist, None, mtx)
+# ksize = 3
+# mag_binary = mag_thresh(image, sobel_kernel=ksize, mag_thresh=(5, 250))
+# dir_binary = dir_threshold(image, sobel_kernel=ksize, thresh=(0.1, 1.3))
+# gradx = abs_sobel_thresh(img, orient='x', sobel_kernel=ksize, thresh=(10, 100))
+# grady = abs_sobel_thresh(img, orient='y', sobel_kernel=ksize, thresh=(10, 100))
+
+# combined = np.zeros_like(dir_binary)
+# combined[((gradx == 1) | (grady == 1))] =1 #| ((mag_binary == 1) & (dir_binary == 1))] = 1
+# plt.imshow(dir_binary)
+# plt.show()
 
 def thres_img(img):
   '''
@@ -93,9 +146,12 @@ def thres_img(img):
   # plt.imshow(lab_binary, cmap = 'gray')
   # plt.show()
 
+  sob = abs_sobel_thresh(img)
+  mag_binary = mag_thresh(image, sobel_kernel=3, mag_thresh=(5, 250))
+  dir_binary = dir_threshold(image, sobel_kernel=3, thresh=(0.1, 1.3))
   #combine the two binary thresholds
   combined_binary = np.zeros_like(l_binary)
-  combined_binary[(lab_binary == 1) | (l_binary == 1) ] = 1
+  combined_binary[((lab_binary == 1) & (dir_binary ==1)) | ((l_binary == 1) & (dir_binary==1))] = 1
   # plt.imshow(combined_binary, cmap='gray')
   # plt.show()
   return combined_binary
@@ -154,7 +210,7 @@ def lines_pixels(img):
   init_peak_left = int(np.argmax(hist_left_half))
 
   x_val = init_peak_left
-  previous = 0
+  previous_left = 0
   for i in (range(100)):
     img_y1 = img.shape[0]-img.shape[0]*i/100
     img_y2 = img.shape[0]-img.shape[0]*(i+1)/100
@@ -164,19 +220,19 @@ def lines_pixels(img):
     y_val = int(720-i*img.shape[0]/100)
     if (y_val == 0 or x_val == 0):
       pass
-    elif (abs(x_val-previous) > 100 and not(i == 99) and not(previous == 0)):
+    elif (abs(x_val-previous_left) > 100 and not(i == 99) and not(previous_left == 0)):
       pass
     else:
       left_lane_x.append(x_val)
       left_lane_y.append(y_val)
-      previous = x_val
+      previous_left = x_val
 
   #for right lane:
   hist_right_half = np.sum(img[img.shape[0]/2:,img.shape[1]/2:], axis=0)
   init_peak_right = int(np.argmax(hist_right_half)) + 640
 
   x_val = init_peak_right
-  previous = 0
+  previous_right = 0
   for i in (range(100)):
     img_y1 = img.shape[0]-img.shape[0]*i/100
     img_y2 = img.shape[0]-img.shape[0]*(i+1)/100
@@ -186,12 +242,12 @@ def lines_pixels(img):
     y_val = int(720-i*img.shape[0]/100)
     if (y_val == 0 or x_val == 640):
       pass
-    elif (abs(x_val-previous) > 100 and not(i == 99) and not(previous == 0)):
+    elif (abs(x_val-previous_right) > 100 and not(i == 99) and not(previous_right == 0)):
       pass
     else:
       right_lane_x.append(x_val)
       right_lane_y.append(y_val)
-      previous = x_val
+      previous_right = x_val
           
   #plot the pixels:
   # plt.imshow(img)
@@ -276,11 +332,15 @@ def radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y):
 #   return masked_image
 
 
-def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y):
+def draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_lane_y):
   # Create an image to draw the lines on
   warp_zero = np.zeros_like(warped_img).astype(np.uint8)
   color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
+  left_lane_y = np.linspace(np.min(left_lane_y), image.shape[0],10)
+  right_lane_y = left_lane_y
+  left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]
+  right_fitx = right_fit[0]*left_lane_y**2 + right_fit[1]*left_lane_y + right_fit[2]
   # Recast the x and y points into usable format for cv2.fillPoly()
   pts_left = np.array([np.transpose(np.vstack([left_fitx, left_lane_y]))])
   pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, right_lane_y])))])
@@ -304,18 +364,18 @@ def draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, righ
   # Combine the result with the original image
   result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
 
-  cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  if car_position<0:
-    cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  else:
-    cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  # cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  # cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  # if car_position<0:
+  #   cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  # else:
+  #   cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   return result
   # plt.imshow(result)
 
 ###########################
 #for single image:
-image = images[5]
+image = images[0]
 image = mpimg.imread(image)
 #apply distortion correction to the raw image
 img = cv2.undistort(image, mtx, dist, None, mtx)
@@ -329,146 +389,145 @@ warped_img = warp(thresholded)
 # histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
 # plt.plot(histogram)
 # plt.imshow(warped_img)
-left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
-left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
-draw_on_img(warped_img, img, image, left_fitx, right_fitx, left_lane_y, right_lane_y)
+
+# left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+# left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
+# left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
+# right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
+# draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_lane_y)
 # plt.show() 
 #############################
 
 # def final_points(img):
 def region_of_interest(img, vertices):
-    """
-    Applies an image mask.
-    Only keeps the region of the image defined by the polygon
-    formed from `vertices`. The rest of the image is set to black.
-    """
-    #defining a blank mask to start with
-    mask = np.zeros_like(img)   
-    
-    if len(img.shape) > 2:
-        channel_count = img.shape[2]  
-        ignore_mask_color = (255,) * channel_count
-    else:
-        ignore_mask_color = 255
-        
-    #filling pixels inside the polygon defined by "vertices" with the fill color    
-    cv2.fillPoly(mask, vertices, ignore_mask_color)
-    
-    #returning the image only where mask pixels are nonzero
-    masked_image = cv2.bitwise_and(img, mask)
-    
-    return masked_image
+  """
+  Applies an image mask.
+  Only keeps the region of the image defined by the polygon
+  formed from `vertices`. The rest of the image is set to black.
+  """
+  #defining a blank mask to start with
+  mask = np.zeros_like(img)   
+  
+  if len(img.shape) > 2:
+      channel_count = img.shape[2]  
+      ignore_mask_color = (255,) * channel_count
+  else:
+      ignore_mask_color = 255
+      
+  #filling pixels inside the polygon defined by "vertices" with the fill color    
+  cv2.fillPoly(mask, vertices, ignore_mask_color)
+  
+  #returning the image only where mask pixels are nonzero
+  masked_image = cv2.bitwise_and(img, mask)
+  
+  return masked_image
 
 def radius_curv(xpoints, ypoints):
-  #use left_lane_x, right_lane_x afterwards (instead of left_fitx, right_fitx)
+  '''
+  Calculates the curvature at the max y point
+  '''
   ym_per_pix = 30.0/720.0
   xm_per_pix = 3.7/700.0
 
   y_eval = np.max(ypoints)
-  # y_eval_right = np.max(right_lane_y)
+
   fit_cr = np.polyfit(ypoints*ym_per_pix, xpoints*xm_per_pix, 2)
-  # right_fit_cr = np.polyfit(right_lane_y*ym_per_pix, right_lane_x*xm_per_pix, 2)
 
   curverad = ((1 + (2*fit_cr[0]*y_eval + fit_cr[1])**2)**1.5) \
                              /np.absolute(2*fit_cr[0])
-
-  # right_curverad = ((1 + (2*right_fit_cr[0]*y_eval_right + right_fit_cr[1])**2)**1.5) \
-  #                               /np.absolute(2*right_fit_cr[0])
 
   return curverad
 
 
 #VIDEO:
-frame_count = 0
-final_pts_left_y = []
-final_pts_left_x = []
-final_pts_right_y = []
-final_pts_right_x = []
-left_curverad_prior = 0
-right_curverad_prior = 0
-
-
 class Line():
-    def __init__(self, xpoints, ypoints):
+    def __init__(self, xpoints, ypoints, fitx):
       self.detected = False 
-      # self.recent_xfitted = [] 
       self.radius_of_curvature = radius_curv(xpoints, ypoints)
       self.allx= xpoints 
       self.ally = ypoints 
-      # self.all
+      self.fitx = fitx
+
+frame_count = 0
+left_curverad_prior = 0
+right_curverad_prior = 0
+matching_count_left = 0
+matching_count_right = 0
 
 def pipeline(image):
-  global frame_count, left_curverad_prior, right_curverad_prior, vertices_left, vertices_right, final_pts_left_y, final_pts_left_x, final_pts_right_y, final_pts_right_x, left, right, left_lane_prior, right_lane_prior
+  global frame_count, left_curverad_prior, right_curverad_prior, vertices_left, vertices_right, final_pts_left_y, final_pts_left_x, final_pts_right_y, final_pts_right_x, left, right, left_lane_prior, right_lane_prior, matching_count_left, matching_count_right
 
   frame_count +=1
   
-
   img = cv2.undistort(image, mtx, dist, None, mtx)
   thresholded = thres_img(img)  
   warped_img = warp(thresholded)
-  
-  # if frame_count == 1:
-  #   print('first frame')
-  #   a = 10
-  #   print(a)
-  #   # return a
-  # elif frame_count >1 and frame_count<10:
-  #   print('within 10')  
-  #   a = a+1
-  #   print(a)
-  # else:
-  #   print('outttt')
-  #   a = a+10
-  #   print(a)
 
+  # plt.imshow(warped_img)
+  # plt.show()
 
-  # image = mpimg.imread(image)
   if frame_count ==1:
     left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
     left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
     
-    left = Line(left_lane_x, left_lane_y)
-    right = Line(right_lane_x, right_lane_y)
+    left = Line(left_lane_x, left_lane_y, left_fitx)
+    right = Line(right_lane_x, right_lane_y, right_fitx)
 
-    y_pts_left = (left.ally)
-    y_pts_right = (right.ally)
-
+    y_pts_left = left.ally
+    y_pts_right = right.ally
+    x_pts_left = left.allx
+    x_pts_right = right.allx
+    left_fitx = left.fitx
+    right_fitx = right.fitx
 
     left_curverad_prior = left_curverad
     right_curverad_prior = right_curverad
-    # print('this is frame 1')
 
-  elif frame_count>1 and frame_count <10:
+    right_lane_prior = right
+    left_lane_prior = left 
+
+    left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
+    right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
+
+  elif frame_count>1 and frame_count <12:
     # print('within 10')
     left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
     left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
-  
-
+      
     if abs(left_curverad - left_curverad_prior) < 100 :
-      left = Line(left_lane_x, left_lane_y)
+      matching_count_left += 1
+      left = Line(left_lane_x, left_lane_y, left_fitx)
       left.detected = True
-      # left = Line(left_lane_x, left_lane_y)
     else:
-      left.detected = False
+      left = left_lane_prior
 
     if abs(right_curverad - right_curverad_prior) < 100:
-      right = Line(right_lane_x, right_lane_y)
+      matching_count_right += 1
+      right = Line(right_lane_x, right_lane_y, right_fitx)
       right.detected = True
-      # right = Line(right_lane_x, right_lane_y)
     else:
-      right.detected = False
+      right = right_lane_prior
 
-    y_pts_left = left_lane_y
-    y_pts_right = right_lane_y
+    # y_pts_left = left_lane_y
+    # y_pts_right = right_lane_y
+
+    y_pts_left = left.ally
+    y_pts_right = right.ally
+    x_pts_left = left.allx
+    x_pts_right = right.allx
+    left_fitx = left.fitx
+    right_fitx = right.fitx
 
     left_curverad_prior = left_curverad
     right_curverad_prior = right_curverad
     left_lane_prior = left
     right_lane_prior = right
 
+    left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
+    right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
+
   else:
-    # print('out')
-    if left_lane_prior.detected == True :
+    if matching_count_left>=5 & matching_count_right>=5:
       maximum_x_left = np.max(left_lane_prior.allx)
       minimum_x_left = np.min(left_lane_prior.allx)
 
@@ -522,100 +581,14 @@ def pipeline(image):
 
       y_pts_left = left_lane_y
       y_pts_right = right_lane_y
-  # if frame_count == 1:
-  #   plt.imshow(warped_img)
-  #   plt.show()
-  #   x_all = np.nonzero(warped_img)
-  #   print((x_all))
+      x_pts_left = left_lane_x
+      x_pts_right = right_lane_x
+ 
+      left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
+      right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
 
-  #   return
+  result =draw_on_img(warped_img, img, image, left_fit, right_fit, y_pts_left, y_pts_right)
 
-################
-  
-  # final_pts_left_y = []
-  # final_pts_left_x = []
-  # final_pts_right_y = []
-  # final_pts_right_x = []
-  # left_curverad_prior = 0
-  # right_curverad_prior = 0
-  
-  # if frame_count>0 & frame_count<10:
-  # #find values for first frame
-  #   left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
-  #   left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
-
-  #   if abs(left_curverad - left_curverad_prior) < 100 :
-  #     final_pts_left_y.append(left_lane_y)
-  #     final_pts_left_x.append(left_lane_x)
-
-  #   if abs(right_curverad - right_curverad_prior) < 100:
-  #     final_pts_right_y.append(right_lane_y)
-  #     final_pts_right_x.append(right_lane_x)
-
-  #   print(final_pts_right_y)
-  #   left_lane_y_prior = left_lane_y
-  #   left_lane_x_prior = left_lane_x
-  #   right_lane_y_prior = right_lane_y
-  #   right_lane_x_prior = right_lane_x
-  #   left_curverad_prior = left_curverad
-  #   right_curverad_prior = right_curverad
-
-  #   maximum_x_left = np.max(final_pts_left_x)
-  #   minimum_x_left = np.min(final_pts_left_x)
-
-  #   maximum_x_right = np.max(final_pts_right_x)
-  #   minimum_x_right = np.min(final_pts_right_x)
-
-  #   vertices_left = np.array([[ (minimum_x_left-50, 720), (minimum_x_left-50, 0), (maximum_x_left+50, 0), (maximum_x_left+50, 720)]])
-  #   vertices_right = np.array([[ (minimum_x_right-50, 720), (minimum_x_right-50, 0), (maximum_x_right+50, 0), (maximum_x_right+50, 720)]])
-  # else:
-
-  #   masked_rectangle_left = region_of_interest(warped_img, vertices_left)
-  #   y_pts_left, x_pts_left = np.nonzero(masked_rectangle_left)
-  #   y_pts_left = np.array(y_pts_left)
-  #   x_pts_left = np.array(x_pts_left)
-
-
-  #   masked_rectangle_right = region_of_interest(warped_img, vertices_right)
-  #   y_pts_right, x_pts_right = np.nonzero(masked_rectangle_right)
-  #   y_pts_right = np.array(y_pts_right)
-  #   x_pts_right = np.array(x_pts_right)
-
-  #   left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
-  #   left_fitx = left_fit[0]*y_pts_left**2 + left_fit[1]*y_pts_left + left_fit[2]
-
-  #   right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
-  #   right_fitx = left_fit[0]*y_pts_right**2 + left_fit[1]*y_pts_right + left_fit[2]
-#     #################
-
-  result =draw_on_img(warped_img, img, image, left_fitx, right_fitx, y_pts_left, y_pts_right)
-
-  #replaced by line above
-  # warp_zero = np.zeros_like(warped_img).astype(np.uint8)
-  # color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
-
-  # # Recast the x and y points into usable format for cv2.fillPoly()
-  # pts_left = np.array([np.transpose(np.vstack([left_fitx, y_pts_left]))])
-  # pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, y_pts_right])))])
-  # pts = np.hstack((pts_left, pts_right))
-
-
-  # # Draw the lane onto the warped blank image
-  # cv2.fillPoly(color_warp, np.int_([pts]), (0,255,0))
-  # src = np.float32([[240,720],
-  #                   [575,460],
-  #                   [715,460],
-  #                   [1150,720]])
-
-  # dst = np.float32([[240,720],
-  #                   [240,0],
-  #                   [1150,0],
-  #                   [1150,720]])
-  # Minv = cv2.getPerspectiveTransform(dst, src)
-  # # Warp the blank back to original image space using inverse perspective matrix (Minv)
-  # newwarp = cv2.warpPerspective(color_warp, Minv, (image.shape[1], image.shape[0])) 
-  # # Combine the result with the original image
-  # result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
 
   cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
@@ -631,7 +604,7 @@ def pipeline(image):
 
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
-vid_output = 'project_video_out.mp4'
+vid_output = 'mag_video_out.mp4'
 clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/project_video.mp4')
 
 n_frames = sum(1 for x in clip1.iter_frames())
