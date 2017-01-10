@@ -25,29 +25,7 @@ dist = calibration.dist
 # plt.imshow(gray, cmap= 'gray')
 # plt.show()
 # print(img.shape)
-def mag_thresh(img, sobel_kernel=3, mag_thresh=(10, 200)):
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
-    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
-    abs_sobelxy = np.sqrt(sobelx**2 + sobely**2)
-    scaled_sobel = np.uint8(255*abs_sobelxy/np.max(abs_sobelxy))
-    mag_binary = np.zeros_like(scaled_sobel)
-    mag_binary[(scaled_sobel>=mag_thresh[0]) & (scaled_sobel<=mag_thresh[1])]=1
-    return mag_binary
-
-def abs_sobel_thresh(img, orient='x', sobel_kernel=3, thresh=(10, 50)):
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    if orient == 'x':
-      sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
-      abs_sobelx = np.absolute(sobelx)
-      scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
-    else:
-      sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
-      abs_sobely = np.absolute(sobely)
-      scaled_sobel = np.uint8(255*abs_sobely/np.max(abs_sobely))        
-    grad_binary = np.zeros_like(scaled_sobel)
-    grad_binary[(scaled_sobel >= thresh[0]) & (scaled_sobel<=thresh[1])]=1
-    return grad_binary   
+  
 
 def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
     '''
@@ -64,20 +42,6 @@ def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
     return dir_binary    
 
 
-# image = images[0]
-# image = mpimg.imread(image)
-# #apply distortion correction to the raw image
-# img = cv2.undistort(image, mtx, dist, None, mtx)
-# ksize = 3
-# mag_binary = mag_thresh(image, sobel_kernel=ksize, mag_thresh=(5, 250))
-# dir_binary = dir_threshold(image, sobel_kernel=ksize, thresh=(0.1, 1.3))
-# gradx = abs_sobel_thresh(img, orient='x', sobel_kernel=ksize, thresh=(10, 100))
-# grady = abs_sobel_thresh(img, orient='y', sobel_kernel=ksize, thresh=(10, 100))
-
-# combined = np.zeros_like(dir_binary)
-# combined[((gradx == 1) | (grady == 1))] =1 #| ((mag_binary == 1) & (dir_binary == 1))] = 1
-# plt.imshow(dir_binary)
-# plt.show()
 
 def thres_img(img):
   '''
@@ -88,16 +52,16 @@ def thres_img(img):
   # img = cv2.undistort(img, mtx, dist, None, mtx)
 
   #convert to HLS space and separate S channel:
-  hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
-  s_channel = hls[:,:,2]
+  # hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+  # s_channel = hls[:,:,2]
   
   #convert to grayscale:
-  gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+  # gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
   #apply Sobel X filter:
-  sobelX = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
-  abs_sobelX = np.absolute(sobelX)
-  scaled_sobel = np.uint8(255*abs_sobelX/np.max(abs_sobelX)) #convert it to 8-bit
+  # sobelX = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
+  # abs_sobelX = np.absolute(sobelX)
+  # scaled_sobel = np.uint8(255*abs_sobelX/np.max(abs_sobelX)) #convert it to 8-bit
 
   # #apply Sobel Y filter:
   # sobelY = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
@@ -106,25 +70,21 @@ def thres_img(img):
 
 
   #create binary threshold to select pixels based on gradient strength (for x gradient):
-  thresh_min = 20
-  thresh_max = 100
-  sxbinary = np.zeros_like(scaled_sobel)
-  sxbinary[(scaled_sobel>=thresh_min) & (scaled_sobel<=thresh_max)] = 1 
+  # thresh_min = 20
+  # thresh_max = 100
+  # sxbinary = np.zeros_like(scaled_sobel)
+  # sxbinary[(scaled_sobel>=thresh_min) & (scaled_sobel<=thresh_max)] = 1 
   # plt.imshow(sxbinary, cmap = 'gray')
   # plt.show()
 
   #create binary threshold to select pixels based on gradient strength (for color channel S): 
-  s_thresh_min = 180
-  s_thresh_max = 255
-  s_binary = np.zeros_like(s_channel)
-  s_binary[(s_channel>=s_thresh_min) & (s_channel<=s_thresh_max)]=1
+  # s_thresh_min = 180
+  # s_thresh_max = 255
+  # s_binary = np.zeros_like(s_channel)
+  # s_binary[(s_channel>=s_thresh_min) & (s_channel<=s_thresh_max)]=1
   # plt.imshow(s_binary, cmap = 'gray')
   # plt.show()
 
-  #stack each channel to view their individual contributions in green and blue respectively:
-  color_binary = np.dstack((np.zeros_like(sxbinary), sxbinary, s_binary))
-  # plt.imshow(color_binary)
-  # plt.show()
 
   #luv: (better for white lanes)
   luv = cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
@@ -146,10 +106,9 @@ def thres_img(img):
   # plt.imshow(lab_binary, cmap = 'gray')
   # plt.show()
 
-  sob = abs_sobel_thresh(img)
-  mag_binary = mag_thresh(image, sobel_kernel=3, mag_thresh=(5, 250))
   dir_binary = dir_threshold(image, sobel_kernel=3, thresh=(0.1, 1.3))
-  #combine the two binary thresholds
+
+  #combine the binary thresholds
   combined_binary = np.zeros_like(l_binary)
   combined_binary[((lab_binary == 1) & (dir_binary ==1)) | ((l_binary == 1) & (dir_binary==1))] = 1
   # plt.imshow(combined_binary, cmap='gray')
@@ -375,27 +334,29 @@ def draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_
 
 ###########################
 #for single image:
-image = images[0]
-image = mpimg.imread(image)
-#apply distortion correction to the raw image
-img = cv2.undistort(image, mtx, dist, None, mtx)
-thresholded = thres_img(img)
-# masked = mask(thresholded)
-# plt.imshow(img)
-warped_img = warp(thresholded)
-# thresholded = thres_img(warped_img)
-# plt.show()
-# plt.imshow(warped_img, cmap='gray')
-# histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
-# plt.plot(histogram)
-# plt.imshow(warped_img)
+def image_pipeline(image):
+  # image = images[0]
+  image = mpimg.imread(image)
+  #apply distortion correction to the raw image
+  img = cv2.undistort(image, mtx, dist, None, mtx)
+  #apply threshold
+  thresholded = thres_img(img)
+  #apply perspective transform for "bird-eye-view"
+  warped_img = warp(thresholded)
+  # thresholded = thres_img(warped_img)
+  # plt.show()
+  # plt.imshow(warped_img, cmap='gray')
+  # histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
+  # plt.plot(histogram)
+  # plt.imshow(warped_img)
 
-# left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
-# left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
-# left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
-# right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
-# draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_lane_y)
-# plt.show() 
+  left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+  left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
+  left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
+  right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
+  result = draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_lane_y)
+  # plt.imshow(result)
+  # plt.show() 
 #############################
 
 # def final_points(img):
