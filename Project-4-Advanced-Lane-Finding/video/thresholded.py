@@ -106,11 +106,11 @@ def thres_img(img):
   # plt.imshow(lab_binary, cmap = 'gray')
   # plt.show()
 
-  dir_binary = dir_threshold(image, sobel_kernel=3, thresh=(0.1, 1.3))
+  dir_binary = dir_threshold(img, sobel_kernel=3, thresh=(0.1, 1.3))
 
   #combine the binary thresholds
   combined_binary = np.zeros_like(l_binary)
-  combined_binary[((lab_binary == 1) & (dir_binary ==1)) | ((l_binary == 1) & (dir_binary==1))] = 1
+  combined_binary[((lab_binary == 1) & (dir_binary ==1)) | (l_binary == 1) ] = 1
   # plt.imshow(combined_binary, cmap='gray')
   # plt.show()
   return combined_binary
@@ -335,7 +335,7 @@ def draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_
 ###########################
 #for single image:
 def image_pipeline(image):
-  # image = images[0]
+  image = images[5]
   image = mpimg.imread(image)
   #apply distortion correction to the raw image
   img = cv2.undistort(image, mtx, dist, None, mtx)
@@ -343,8 +343,9 @@ def image_pipeline(image):
   thresholded = thres_img(img)
   #apply perspective transform for "bird-eye-view"
   warped_img = warp(thresholded)
-  # thresholded = thres_img(warped_img)
+
   # plt.show()
+
   # plt.imshow(warped_img, cmap='gray')
   # histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
   # plt.plot(histogram)
@@ -565,7 +566,7 @@ def pipeline(image):
 
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
-vid_output = 'mag_video_out.mp4'
+vid_output = 'test_video.mp4'
 clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/project_video.mp4')
 
 n_frames = sum(1 for x in clip1.iter_frames())
