@@ -1,2 +1,2 @@
 
-Udacity Self-Driving Car Project 4: Advance Lane Finding
+Udacity Self-Driving Car Project 4: Advanced Lane Finding
