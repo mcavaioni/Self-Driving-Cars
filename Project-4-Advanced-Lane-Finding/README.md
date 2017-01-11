@@ -144,6 +144,7 @@ The second approach instead is implemented in the case of no “high-confidence�
 
 Finally, for each frame I depict the values of curvature and car position with respect to the center line (as explained in Step 5).
 
+
 <b>IMPROVEMENTS:</b><br>
 The current pipeline works well for the given video, which has clear image frames with low level of disturbances and overall image noise.
 Also, currently in case the lines are not detected with the “histogram search” method, I roll-back to the values calculated in the previous frame. This could be a bit problematic if it occurs for many frames in a row, creating unreliable lines as they carry the previous detected values.
