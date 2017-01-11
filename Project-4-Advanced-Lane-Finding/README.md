@@ -23,3 +23,14 @@ Applying the OpenCV functions “findChessboardCorners()” and “drawChessboar
 I can detected and sketch the corners on the chessboard images as below.
 
 ![camera_calibration_with_corners] (https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-4-Advanced-Lane-Finding/output_images/camera_calibration/calibration10_with_corners.jpg)
+
+Next, the location of these corners is used to compute values of “mtx”, “dist”, “rvecs” and “tvecs” using the OpenCV function “calibrateCamera”.
+
+mtx: the camera matrix used to transform 3D points to 2D.
+dist: the distortion coefficient
+rvecs: rotation vector
+tvecs: translation vector
+
+Finally these values are used as inputs in the openCV function “undistort” which provides the image cleared from any distortion induced by the camera lenses.
+
+undist = cv2.undistort(input_img, mtx, dist, None, mtx)
