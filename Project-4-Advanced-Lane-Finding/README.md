@@ -162,7 +162,8 @@ ______________
 - "test{}_thresholded": binary image<br>
 - "test{}_undistort": undistorted image<br>
 - "test{}_warped": warped image ("birds-eye-view" applying perspective transform)<br>
-- "test{}_warped_with_lines": warped image with polynomial lines<br>
+- "test{}_warped_with_lines": warped image with polynomial lines<br><br>
+
 <b>Output_images/camera_calibration</b> - it contains camera calibration images. The description of each image is the following:<br>
 - "calibration{}_with_corners": identifies the corners in a chessboard 
 - "calibration_undistorted": undistorted image 
