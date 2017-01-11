@@ -133,7 +133,7 @@ In each frame the values of the curvature of the lane line (A value in the f(y)=
 If A and B are differing from the previous ones by a 10%<sup>*</sup> range than I consider the line as “detected” and I keep track of it modifying the property of Line Class instance (self.detected) to True.
 If for all the ten frames the lines (left and right) are detected every time, I consider it a “high confidence” detection and use the last frame line detection as the starting point for the subsequent frame.
 
-( <sup>*</sup>the 10% range was a reasonable value based on experience of several video frames)
+( <sup>*</sup> the 10% range was a reasonable value based on experience of several video frames)
 
 *Remaining video frames:*<br>
 For these final video frames I adopted an if/else approach.
@@ -148,3 +148,9 @@ Finally, for each frame I depict the values of curvature and car position with r
 The current pipeline works well for the given video, which has clear image frames with low level of disturbances and overall image noise.
 Also, currently in case the lines are not detected with the “histogram search” method, I roll-back to the values calculated in the previous frame. This could be a bit problematic if it occurs for many frames in a row, creating unreliable lines as they carry the previous detected values.
 One idea would be to implement a deep learning CNN to predict the left/right lane polynomial coefficients in case of failure of detecting the current lines.
+
+______________
+
+<i>Files used:</i><br>
+<b>calibration.py</b> - The script used to calibrate the camera and obtain mtx and dist values. <br>
+<b>pipeline.py</b> - The script used to create pipeline for images and video stream. </br>
