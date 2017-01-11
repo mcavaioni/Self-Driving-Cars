@@ -411,8 +411,6 @@ def pipeline(image):
     left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
     right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
 
-    print(matching_count_left)
-    print(matching_count_right)
   #for the rest of the frames after the first ones we use the position of the detected lane in the prior frame as
   #a starting point for pixels detection. If there is "high confidence" of lanes detection in the prior ten frames 
   #then a "window" around the prior lanes positions is drafted and only pixels within that window are 
@@ -490,8 +488,8 @@ def pipeline(image):
 
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
-vid_output = 'sss_video.mp4'
-clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/project_video.mp4')
+vid_output = 'chall_video.mp4'
+clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/challenge_video.mp4')
 vid_clip = clip1.fl_image(pipeline) 
 vid_clip.write_videofile(vid_output, audio=False)
 
