@@ -175,7 +175,7 @@ def lines_pixels(img):
   
   car_position = (640-middle_lane)*(3.7/700)
 
-  return left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position
+  return left_fit, right_fit, left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position
 
 def radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y):
   '''
@@ -253,7 +253,7 @@ def image_pipeline(image):
   warped_img = warp(thresholded)
 
   #lines detection
-  left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+  left_fit, right_fit, left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
   left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
   left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
   right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
@@ -311,12 +311,13 @@ def radius_curv(xpoints, ypoints):
 
 #create a class to keep track of changes from frame to frame
 class Line():
-    def __init__(self, xpoints, ypoints, fitx):
+    def __init__(self, xpoints, ypoints, fitx, fit):
       self.detected = False 
       self.radius_of_curvature = radius_curv(xpoints, ypoints)
       self.allx= xpoints 
       self.ally = ypoints 
       self.fitx = fitx
+      self.fit = fit
 
 frame_count = 0
 left_curverad_prior = 0
@@ -329,7 +330,7 @@ def pipeline(image):
   pipeline for video. It applies distortion correction, binary threshold, perspective transform,
   lines detection and finally draws the detected area down on the original image frames.
   '''
-  global frame_count, left_curverad_prior, right_curverad_prior, vertices_left, vertices_right, left, right, left_lane_prior, right_lane_prior, matching_count_left, matching_count_right
+  global frame_count, left_fit, right_fit, left_curverad_prior, right_curverad_prior, vertices_left, vertices_right, left, right, left_lane_prior, right_lane_prior, matching_count_left, matching_count_right
 
   frame_count +=1
   
@@ -342,12 +343,12 @@ def pipeline(image):
 
   #for the first video frame it detects the lines with the "histogram" approach
   if frame_count ==1:
-    left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+    left_fit, right_fit, left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
     left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
     
     #set class instances to keep track of values
-    left = Line(left_lane_x, left_lane_y, left_fitx)
-    right = Line(right_lane_x, right_lane_y, right_fitx)
+    left = Line(left_lane_x, left_lane_y, left_fitx, left_fit)
+    right = Line(right_lane_x, right_lane_y, right_fitx, right_fit)
 
     #these values are set for the class instances
     y_pts_left = left.ally
@@ -371,23 +372,23 @@ def pipeline(image):
 
   #for the following 10 frames it detects the lines with the "histogram" approach and verifies "high confidence" for lanes detection
   elif frame_count>1 and frame_count <12:
-    left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+    left_fit, right_fit, left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
     left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
-    
-    #the values of the left lane curvature if evaluated versus the prior one in the previous frame. IF the values are similar we 
+
+    #the values of the left lane curvature and heading are evaluated versus the prior ones in the previous frame. If the values are similar (within 10%) we 
     #consider it a "lane detection"
-    if abs(left_curverad - left_curverad_prior) < 100 :
+    if (abs(left_fit[0] - left_lane_prior.fit[0]) < 0.3) & (abs(left_fit[1] - left_lane_prior.fit[1]) < 0.3) :
       matching_count_left += 1
-      left = Line(left_lane_x, left_lane_y, left_fitx)
+      left = Line(left_lane_x, left_lane_y, left_fitx, left_fit)
       left.detected = True
     else:
       left = left_lane_prior
 
-    #the values of the right lane curvature if evaluated versus the prior one in the previous frame. IF the values are similar we 
+    #the values of the right lane curvature and heading are evaluated versus the prior ones in the previous frame. If the values are similar (within 10%) we 
     #consider it a "lane detection"
-    if abs(right_curverad - right_curverad_prior) < 100:
+    if (abs(right_fit[0] - right_lane_prior.fit[0]) < 0.3) & (abs(right_fit[1] - right_lane_prior.fit[1]) < 0.3):
       matching_count_right += 1
-      right = Line(right_lane_x, right_lane_y, right_fitx)
+      right = Line(right_lane_x, right_lane_y, right_fitx, right_fit)
       right.detected = True
     else:
       right = right_lane_prior
@@ -410,14 +411,16 @@ def pipeline(image):
     left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
     right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
 
+    print(matching_count_left)
+    print(matching_count_right)
   #for the rest of the frames after the first ones we use the position of the detected lane in the prior frame as
   #a starting point for pixels detection. If there is "high confidence" of lanes detection in the prior ten frames 
   #then a "window" around the prior lanes positions is drafted and only pixels within that window are 
   #considered as part of the lanes. (so, no histogram search, but "nonzero" approach for pixels detection)
   else:
     #matching_count is how many times in the prior ten frames the lanes where detected. It's considered as a value of "high confidence"
-    #for subsequent frames it also evaluates that in the "prior" frame the "nonzero" values where not empty.
-    if matching_count_left>=5 & matching_count_right>=5 and left_lane_prior.fitx != [] and right_lane_prior.fitx !=[]:
+    #for subsequent frames. We also evaluate that in the "prior" frame the "nonzero" values were not empty.
+    if matching_count_left==10 & matching_count_right==10 and left_lane_prior.fitx != [] and right_lane_prior.fitx !=[]:
       maximum_x_left = np.max(left_lane_prior.allx)
       minimum_x_left = np.min(left_lane_prior.allx)
 
@@ -446,8 +449,8 @@ def pipeline(image):
       right_fitx = right_fit[0]*y_pts_right**2 + right_fit[1]*y_pts_right + right_fit[2]
 
       #set the current lanes as "prior" for the following frames
-      left_lane_prior = Line(x_pts_left, y_pts_left,left_fitx)
-      right_lane_prior = Line(x_pts_right, y_pts_right, right_fitx)
+      left_lane_prior = Line(x_pts_left, y_pts_left,left_fitx, left_fit)
+      right_lane_prior = Line(x_pts_right, y_pts_right, right_fitx, right_fit)
 
       #calculates curvature and car position values
       left_curverad, right_curverad = radius(x_pts_left, y_pts_left, x_pts_right, y_pts_right)
@@ -460,7 +463,7 @@ def pipeline(image):
 
     #if no "high confidence" in the first frames is achieved, then we use the "histogram" search approach for pixels detection
     else:
-      left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
+      left_fit, right_fit, left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
       left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
 
       y_pts_left = left_lane_y
@@ -487,7 +490,7 @@ def pipeline(image):
 
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
-vid_output = 'project_video.mp4'
+vid_output = 'sss_video.mp4'
 clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/project_video.mp4')
 vid_clip = clip1.fl_image(pipeline) 
 vid_clip.write_videofile(vid_output, audio=False)
