@@ -33,4 +33,10 @@ tvecs: translation vector
 
 Finally these values are used as inputs in the openCV function “undistort” which provides the image cleared from any distortion induced by the camera lenses.
 
-undist = cv2.undistort(input_img, mtx, dist, None, mtx)
+<center> undist = cv2.undistort(input_img, mtx, dist, None, mtx)</center>
+
+![original_vs_undistorted](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-4-Advanced-Lane-Finding/output_images/camera_calibration/original_vs_undistorted.png)
+
+Here the result of the distortion correction for an image of the road. (the difference is much more subtle than in the previous example. Good reference areas that show the correction are the car’s hood lines)
+
+
