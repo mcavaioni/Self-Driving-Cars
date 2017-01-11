@@ -7,7 +7,7 @@ import glob
 path ='/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/'
 images = glob.glob(path + 'camera_cal/calibration*.jpg')
 
-# def undistort_img(input_img):
+
 nx = 9
 ny = 6
 
@@ -29,20 +29,9 @@ for fname in images:
     imgpoints.append(corners)
     objpoints.append(objp)
     img = cv2.drawChessboardCorners(img, (nx,ny), corners, ret)
-    # plt.imshow(img)
+    plt.imshow(img)
 
 #calibrate the camera
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-
-# test on one image:
-# img = mpimg.imread(path+'/test_images/test4.jpg')
-# plt.imshow(img)
-# plt.show()
-# input_img = input_img
-# undistorting an image "img":
-# undist = cv2.undistort(input_img, mtx, dist, None, mtx)
-# plt.imshow(undist)
-# plt.show()
-
 
 
