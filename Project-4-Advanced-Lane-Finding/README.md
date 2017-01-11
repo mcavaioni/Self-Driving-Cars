@@ -169,5 +169,5 @@ ______________
 - "calibration_undistorted": undistorted image 
 - "original_vs_undistorted": comparison between original and undistorted image<br>
 
-<b>Video></b> - It contains the pipeling video for the project
+<b>Video</b> - It contains the pipeling video for the project
 
