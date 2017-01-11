@@ -33,7 +33,7 @@ tvecs: translation vector
 
 Finally these values are used as inputs in the openCV function “undistort” which provides the image cleared from any distortion induced by the camera lenses.
 
-<center> undist = cv2.undistort(input_img, mtx, dist, None, mtx)</center>
+<p align= "center"> undist = cv2.undistort(input_img, mtx, dist, None, mtx)</p>
 
 ![original_vs_undistorted](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-4-Advanced-Lane-Finding/output_images/camera_calibration/original_vs_undistorted.png)
 
@@ -123,19 +123,19 @@ remaining video frames
 In the last two cases I also added an exception in the occurrence it fails to detect the lines with the “histogram search”, rolling it back to values of the previous frame.
 I created a Line Class which collects information about lines from frame to frame.
 
-<u>First video frame:</u><br>
+*First video frame:*<br>
 In the first video frame I calculate the pixels and polynomial values with the “histogram search” method, as described in Step 4.
 I also create the first instances of left and right Lines Class, which are used as “prior” values for the subsequent frame.
 
-<u>Following 10 video frames:</u><br>
+*Following 10 video frames:*<br>
 For each of the next ten video frames I calculate the pixels and polynomial values as in Step 4 and I keep track of “line detection” with the following methodology.
 In each frame the values of the curvature of the lane line (A value in the f(y)=A*y^2+B*y+C formula, or the fit[0] value in the code) and the heading or direction that the line is pointing to (B value in the formula, or fit[1] in the code) are compared with the values of the previous frame.
 If A and B are differing from the previous ones by a 10%<sup>*</sup> range than I consider the line as “detected” and I keep track of it modifying the property of Line Class instance (self.detected) to True.
 If for all the ten frames the lines (left and right) are detected every time, I consider it a “high confidence” detection and use the last frame line detection as the starting point for the subsequent frame.
 
-(<sup>*</sup>the 10% range was a reasonable value based on experience of several video frames)
+( <sup>*</sup>the 10% range was a reasonable value based on experience of several video frames)
 
-<u>Remaining video frames:</u><br>
+*Remaining video frames:*<br>
 For these final video frames I adopted an if/else approach.
 The first approach evaluates the previous “high confidence” result from the batch of the first ten frames (which is mainly used as a consideration for the first frame of this remaining batch) in addition with a check on the pixel detection from a previous frame.
 If the above statements are true, meaning the “high confidence” level is reached and the previous frame detected some pixels, then for the current frame I use a faster pixel detection method, which evaluates the “nonzero” pixels within an image window which is drawn around the points detected in the previous frame.
