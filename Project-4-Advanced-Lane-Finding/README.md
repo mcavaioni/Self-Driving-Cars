@@ -41,6 +41,7 @@ Here the result of the distortion correction for an image of the road. (the diff
 
 ![orig_vs_undist_car](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-4-Advanced-Lane-Finding/output_images/original_vs_undistorted_car.png)
 
+
 <b>Step 2: Thresholded Binary Image</b><br>
 In this step I take the undistorted image as an input and apply several “filters” to transform the color image in a binary image in order to highlight pixels in lane lines.
 I practiced several gradients and color transforms, getting mixed results.
@@ -73,11 +74,11 @@ Finally, the result of the “getPerspectiveTransform” function is a matrix wh
 For this step I first divide the image in left side and right side in order to separate the left lane from the right one.
 Then for each side I horizontally divide the image in two parts and I take a histogram along all the columns in the lower half of the image like this (for the left side):
 
-<center>hist_left_half = np.sum(img[img.shape[0]/2:,:img.shape[1]/2], axis=0)</center>
+<p style="text-align: center;"> hist_left_half = np.sum(img[img.shape[0]/2:,:img.shape[1]/2], axis=0) </p>
 
 With this histogram I am adding up the pixel values along each column in the half image. In my thresholded binary image, pixels are either 0 or 1, so the two most prominent peak in this histogram will be good indicator of the x-position of the base of the lane line. I can use that as a starting point for where to search for the lines. I set this value as the initial_peak_value.
 
-<center>init_peak_left = int(np.argmax(hist_left_half))</center>
+<p style="text-align: center;"> init_peak_left = int(np.argmax(hist_left_half)) </p>
 
 From this point I divide the image (left side and right side) in different horizontal sections and for each section I apply the histogram peaks search, but evaluating only the peaks that are in closed proximity with the previous section peak value (starting with the initial_peak_value).
 For “closed proximity” I set a value of 100 as a range from previous detected peak and current peak. 
@@ -86,8 +87,8 @@ The detected peaks (x and y pixel values) are collected in an array.
 
 Finally I fit a second order polynomial (f(y) = A*y^2+B*y+C) to the detected pixels position for the right and left lane lines:
 
-<center>left_fit = np.polyfit(left_lane_y, left_lane_x, 2)</center>
-<center>left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]</center>
+<p style="text-align: center;"> left_fit = np.polyfit(left_lane_y, left_lane_x, 2) </p>
+<p style="text-align: center;"> left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2] </p>
 
 ![warped_with_lines](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-4-Advanced-Lane-Finding/output_images/test1_warped_with_lines.jpg)
 
