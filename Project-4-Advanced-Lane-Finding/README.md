@@ -157,14 +157,16 @@ ______________
 <b>pipeline.py</b> - The script used to create pipeline for images and video stream. </br>
 
 <i>Folders:</i><br>
-<b>Output_images</b> - it contains all the images analyzed step-by step. The description of each image is the following:<br>
+<b>Camera_cal</b> - It contains the original chessboard images used for camera calibration<br>
+
+<b>Output_images</b> - It contains all the images analyzed step-by step. The description of each image is the following:<br>
 - "test{}_original_with_area": final image, unwarped with lines area depicted <br>
 - "test{}_thresholded": binary image<br>
 - "test{}_undistort": undistorted image<br>
 - "test{}_warped": warped image ("birds-eye-view" applying perspective transform)<br>
 - "test{}_warped_with_lines": warped image with polynomial lines<br>
 
-<b>Output_images/camera_calibration</b> - it contains camera calibration images. The description of each image is the following:<br>
+<b>Output_images/camera_calibration</b> - It contains camera calibration images. The description of each image is the following:<br>
 - "calibration{}_with_corners": identifies the corners in a chessboard 
 - "calibration_undistorted": undistorted image 
 - "original_vs_undistorted": comparison between original and undistorted image<br>
