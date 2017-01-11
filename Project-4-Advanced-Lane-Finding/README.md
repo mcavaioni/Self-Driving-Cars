@@ -21,3 +21,5 @@ The steps taken are the following: <br>
 In this step I calibrate the camera using pictures of known shapes (i.e. chessboards) in order to calculate the distortion.
 Applying the OpenCV functions “findChessboardCorners()” and “drawChessboardCorners()”
 I can detected and sketch the corners on the chessboard images as below.
+
+![camera_calibration_with_corners] (https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-4-Advanced-Lane-Finding/output_images/camera_calibration/calibration10_with_corners.jpg)
