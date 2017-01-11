@@ -1,4 +1,3 @@
-#Use color transforms, gradients, etc., to create a thresholded binary image.
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -7,25 +6,16 @@ import glob
 
 import calibration
 
-# from scipy.signal import find_peaks_cwt
+
 
 path ='/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/test_images'
 images = glob.glob(path + '/test*.jpg')
 
+#use mtx and dist values calculated for camera calibration:
 mtx = calibration.mtx
 dist = calibration.dist
 
 
-# print(len(images))
-# img = mpimg.imread(images[4])
-# plt.imshow(img)
-# gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-# undist = cv2.undistort(img, mtx, dist, None, mtx)
-# plt.imshow(gray, cmap= 'gray')
-# plt.show()
-# print(img.shape)
-  
 
 def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
     '''
@@ -45,48 +35,10 @@ def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
 
 def thres_img(img):
   '''
-  combines binary threshold for x gradient and for color S channel
+  combines binary threshold for color transforms and gradient direction
   '''
-  # img = mpimg.imread(img)
-  #apply distortion correction to the raw image
-  # img = cv2.undistort(img, mtx, dist, None, mtx)
 
-  #convert to HLS space and separate S channel:
-  # hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
-  # s_channel = hls[:,:,2]
-  
-  #convert to grayscale:
-  # gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-  #apply Sobel X filter:
-  # sobelX = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
-  # abs_sobelX = np.absolute(sobelX)
-  # scaled_sobel = np.uint8(255*abs_sobelX/np.max(abs_sobelX)) #convert it to 8-bit
-
-  # #apply Sobel Y filter:
-  # sobelY = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
-  # abs_sobelY = np.absolute(sobelY)
-  # scaled_sobel = np.uint8(255*abs_sobelY/np.max(abs_sobelY)) #convert it to 8-bit
-
-
-  #create binary threshold to select pixels based on gradient strength (for x gradient):
-  # thresh_min = 20
-  # thresh_max = 100
-  # sxbinary = np.zeros_like(scaled_sobel)
-  # sxbinary[(scaled_sobel>=thresh_min) & (scaled_sobel<=thresh_max)] = 1 
-  # plt.imshow(sxbinary, cmap = 'gray')
-  # plt.show()
-
-  #create binary threshold to select pixels based on gradient strength (for color channel S): 
-  # s_thresh_min = 180
-  # s_thresh_max = 255
-  # s_binary = np.zeros_like(s_channel)
-  # s_binary[(s_channel>=s_thresh_min) & (s_channel<=s_thresh_max)]=1
-  # plt.imshow(s_binary, cmap = 'gray')
-  # plt.show()
-
-
-  #luv: (better for white lanes)
+  #luv: (better for white lanes detection, using l channel)
   luv = cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
   l_channel = luv[:,:,0]
   l_thresh_min = 220
@@ -96,7 +48,7 @@ def thres_img(img):
   # plt.imshow(l_binary, cmap = 'gray')
   # plt.show()
 
-  #lab: (better for yellow lanes)
+  #lab: (better for yellow lanes detection, using b channel)
   lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
   lab_channel = luv[:,:,2]
   lab_thresh_min = 180
@@ -106,6 +58,7 @@ def thres_img(img):
   # plt.imshow(lab_binary, cmap = 'gray')
   # plt.show()
 
+  #apply direction of gradient
   dir_binary = dir_threshold(img, sobel_kernel=3, thresh=(0.1, 1.3))
 
   #combine the binary thresholds
@@ -122,20 +75,7 @@ def warp(img):
   '''
   selects areas and applies Perspective Transform to get "bird-eye-view"
   '''
-
   img_size = (img.shape[1], img.shape[0])
-
-  #trapezoidal
-  # plt.plot(180,700, '.')
-  # plt.plot(580,450, '.')
-  # plt.plot(750,450, '.')
-  # plt.plot(1180,700, '.')
-
-  #rectangle
-  # plt.plot(0,img.shape[0], '.')
-  # plt.plot(0,0, '.')
-  # plt.plot(img.shape[1],0, '.')
-  # plt.plot(img.shape[1],img.shape[0], '.')
 
   src = np.float32([[240,720],
                     [575,460],
@@ -152,13 +92,12 @@ def warp(img):
   return warped
 
 
-
-
 def lines_pixels(img):
   '''
-  finds right and left lane lines
+  Finds right and left lane lines using "histogram" peaks search. It divides the image in several sections.
+  For each section it detects the peak and for the subsequest sections only the peak in close proximity with the
+  previous one is kept. This avoids to consider peaks that are actually not part of the line.
   '''
-
   right_lane_x = []
   right_lane_y = []
   left_lane_x = []
@@ -169,8 +108,9 @@ def lines_pixels(img):
   init_peak_left = int(np.argmax(hist_left_half))
 
   x_val = init_peak_left
-  previous_left = 0
+  previous_left = x_val
   for i in (range(100)):
+    #split the image in several horizontal sections and detect x_val as argmax of histogram peaks
     img_y1 = img.shape[0]-img.shape[0]*i/100
     img_y2 = img.shape[0]-img.shape[0]*(i+1)/100
 
@@ -179,6 +119,8 @@ def lines_pixels(img):
     y_val = int(720-i*img.shape[0]/100)
     if (y_val == 0 or x_val == 0):
       pass
+    #it keeps track of previous "section" peak detection and for the new "section" considers peaks if they are
+    #in close proximity with the previous one
     elif (abs(x_val-previous_left) > 100 and not(i == 99) and not(previous_left == 0)):
       pass
     else:
@@ -191,8 +133,9 @@ def lines_pixels(img):
   init_peak_right = int(np.argmax(hist_right_half)) + 640
 
   x_val = init_peak_right
-  previous_right = 0
+  previous_right = x_val
   for i in (range(100)):
+    #split the image in several horizontal sections and detect x_val as argmax of histogram peaks
     img_y1 = img.shape[0]-img.shape[0]*i/100
     img_y2 = img.shape[0]-img.shape[0]*(i+1)/100
 
@@ -201,6 +144,8 @@ def lines_pixels(img):
     y_val = int(720-i*img.shape[0]/100)
     if (y_val == 0 or x_val == 640):
       pass
+    #it keeps track of previous "section" peak detection and for the new "section" considers peaks if they are
+    #in close proximity with the previous one
     elif (abs(x_val-previous_right) > 100 and not(i == 99) and not(previous_right == 0)):
       pass
     else:
@@ -208,40 +153,20 @@ def lines_pixels(img):
       right_lane_y.append(y_val)
       previous_right = x_val
           
-  #plot the pixels:
-  # plt.imshow(img)
-  # plt.plot(left_lane_x, left_lane_y, 'o', color='yellow')
-  # plt.plot(right_lane_x, right_lane_y, 'o', color = 'blue')
-  
 
   #fit polynomial on the left:
   left_lane_y = np.array(left_lane_y)
   left_lane_x = np.array(left_lane_x)
   left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
-
-  #extend the line to the border of the image
-  # for i in reversed(range(0,left_lane_y[-1])):
-  #   left_lane_y = np.append(left_lane_y, i+1)
-  # for i in range(left_lane_y[0], 720):
-  #   left_lane_y = np.insert(left_lane_y, 0, i+1)
-
   left_fitx = left_fit[0]*left_lane_y**2 + left_fit[1]*left_lane_y + left_fit[2]
-  # plt.plot(left_fitx, left_lane_y, color='green', linewidth=3)
+
 
   #fit polynomial on the right:
   right_lane_y = np.array(right_lane_y)
   right_lane_x = np.array(right_lane_x)
+
   right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
-
-  #extend the line to the border of the image
-  # for i in reversed(range(0,right_lane_y[-1])):
-  #   right_lane_y = np.append(right_lane_y, i+1)
-  # for i in range(right_lane_y[0], 720):
-  #   right_lane_y = np.insert(right_lane_y, 0, i+1)
-
   right_fitx = right_fit[0]*right_lane_y**2 + right_fit[1]*right_lane_y + right_fit[2]
-  # plt.plot(right_fitx, right_lane_y, color='green', linewidth=3)
-  # plt.show()
 
   #find position of the car at the end of the y lane (closed to bottom of image)
   right_fitx_position = right_fit[0]*715**2 + right_fit[1]*715 + right_fit[2]
@@ -249,11 +174,14 @@ def lines_pixels(img):
   middle_lane = left_fitx_position + (right_fitx_position - left_fitx_position)/2
   
   car_position = (640-middle_lane)*(3.7/700)
-  
+
   return left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position
 
 def radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y):
-  #use left_lane_x, right_lane_x afterwards (instead of left_fitx, right_fitx)
+  '''
+  calculates curvature of left and right lane
+  '''
+  #transform from pixel value to meter
   ym_per_pix = 30.0/720.0
   xm_per_pix = 3.7/700.0
 
@@ -270,28 +198,12 @@ def radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y):
 
   return left_curverad, right_curverad
 
-# def mask(img):
-#   '''
-#   masks the area around the lane lines, making black the rest
-#   '''
-#   mask = np.zeros_like(img)   
-
-#   if len(img.shape) > 2:
-#       channel_count = img.shape[2]  
-#       ignore_mask_color = (255,) * channel_count
-#   else:
-#       ignore_mask_color = 255
-      
-#   vertices = np.array([[(250,700),(550,450),(750,450),(1200,700)]])
-#   #filling pixels inside the polygon defined by "vertices" with the fill color    
-#   cv2.fillPoly(mask, vertices, ignore_mask_color)
-  
-#   #returning the image only where mask pixels are nonzero
-#   masked_image = cv2.bitwise_and(img, mask)
-#   return masked_image
 
 
 def draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_lane_y):
+  '''
+  Draws the lines and an area connecting left and right lines back down onto the original image
+  '''
   # Create an image to draw the lines on
   warp_zero = np.zeros_like(warped_img).astype(np.uint8)
   color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
@@ -304,7 +216,6 @@ def draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_
   pts_left = np.array([np.transpose(np.vstack([left_fitx, left_lane_y]))])
   pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, right_lane_y])))])
   pts = np.hstack((pts_left, pts_right))
-
 
   # Draw the lane onto the warped blank image
   cv2.fillPoly(color_warp, np.int_([pts]), (0,255,0))
@@ -323,19 +234,16 @@ def draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_
   # Combine the result with the original image
   result = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
 
-  # cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  # cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  # if car_position<0:
-  #   cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  # else:
-  #   cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   return result
-  # plt.imshow(result)
+
 
 ###########################
 #for single image:
 def image_pipeline(image):
-  image = images[5]
+  '''
+  pipeline for single image. It applies distortion correction, binary threshold, perspective transform,
+  lines detection and finally draws the detected area down on the original image
+  '''
   image = mpimg.imread(image)
   #apply distortion correction to the raw image
   img = cv2.undistort(image, mtx, dist, None, mtx)
@@ -344,23 +252,24 @@ def image_pipeline(image):
   #apply perspective transform for "bird-eye-view"
   warped_img = warp(thresholded)
 
-  # plt.show()
-
-  # plt.imshow(warped_img, cmap='gray')
-  # histogram = np.sum(warped_img[warped_img.shape[0]/2:,:], axis=0)
-  # plt.plot(histogram)
-  # plt.imshow(warped_img)
-
+  #lines detection
   left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
   left_curverad, right_curverad = radius(left_fitx, left_lane_y, right_fitx, right_lane_y)
   left_fit = np.polyfit(left_lane_y, left_lane_x, 2)
   right_fit = np.polyfit(right_lane_y, right_lane_x, 2)
+  #draws area back on the original image 
   result = draw_on_img(warped_img, img, image, left_fit, right_fit, left_lane_y, right_lane_y)
-  # plt.imshow(result)
+
+  cv2.putText(result, "Lane curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  if car_position<0:
+    cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  else:
+    cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  plt.imshow(result)
   # plt.show() 
 #############################
+#VIDEO:
 
-# def final_points(img):
 def region_of_interest(img, vertices):
   """
   Applies an image mask.
@@ -386,7 +295,7 @@ def region_of_interest(img, vertices):
 
 def radius_curv(xpoints, ypoints):
   '''
-  Calculates the curvature at the max y point
+  Calculates the curvature at the max y point 
   '''
   ym_per_pix = 30.0/720.0
   xm_per_pix = 3.7/700.0
@@ -397,11 +306,10 @@ def radius_curv(xpoints, ypoints):
 
   curverad = ((1 + (2*fit_cr[0]*y_eval + fit_cr[1])**2)**1.5) \
                              /np.absolute(2*fit_cr[0])
-
   return curverad
 
 
-#VIDEO:
+#create a class to keep track of changes from frame to frame
 class Line():
     def __init__(self, xpoints, ypoints, fitx):
       self.detected = False 
@@ -417,24 +325,31 @@ matching_count_left = 0
 matching_count_right = 0
 
 def pipeline(image):
-  global frame_count, left_curverad_prior, right_curverad_prior, vertices_left, vertices_right, final_pts_left_y, final_pts_left_x, final_pts_right_y, final_pts_right_x, left, right, left_lane_prior, right_lane_prior, matching_count_left, matching_count_right
+  '''
+  pipeline for video. It applies distortion correction, binary threshold, perspective transform,
+  lines detection and finally draws the detected area down on the original image frames.
+  '''
+  global frame_count, left_curverad_prior, right_curverad_prior, vertices_left, vertices_right, left, right, left_lane_prior, right_lane_prior, matching_count_left, matching_count_right
 
   frame_count +=1
   
+  #apply distortion correction
   img = cv2.undistort(image, mtx, dist, None, mtx)
+  #apply binary threshold
   thresholded = thres_img(img)  
+  #apply perspective transform for "bird-eye-view"
   warped_img = warp(thresholded)
 
-  # plt.imshow(warped_img)
-  # plt.show()
-
+  #for the first video frame it detects the lines with the "histogram" approach
   if frame_count ==1:
     left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
     left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
     
+    #set class instances to keep track of values
     left = Line(left_lane_x, left_lane_y, left_fitx)
     right = Line(right_lane_x, right_lane_y, right_fitx)
 
+    #these values are set for the class instances
     y_pts_left = left.ally
     y_pts_right = right.ally
     x_pts_left = left.allx
@@ -442,20 +357,25 @@ def pipeline(image):
     left_fitx = left.fitx
     right_fitx = right.fitx
 
+    #set the values of curvature of the first frame as "prior" values for the next frames
     left_curverad_prior = left_curverad
     right_curverad_prior = right_curverad
 
+    #set the class instances of left and right lanes as "prior" values for the next frames
     right_lane_prior = right
     left_lane_prior = left 
 
+    #calculates values for 2nd degree polynomial
     left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
     right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
 
+  #for the following 10 frames it detects the lines with the "histogram" approach and verifies "high confidence" for lanes detection
   elif frame_count>1 and frame_count <12:
-    # print('within 10')
     left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
     left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
-      
+    
+    #the values of the left lane curvature if evaluated versus the prior one in the previous frame. IF the values are similar we 
+    #consider it a "lane detection"
     if abs(left_curverad - left_curverad_prior) < 100 :
       matching_count_left += 1
       left = Line(left_lane_x, left_lane_y, left_fitx)
@@ -463,6 +383,8 @@ def pipeline(image):
     else:
       left = left_lane_prior
 
+    #the values of the right lane curvature if evaluated versus the prior one in the previous frame. IF the values are similar we 
+    #consider it a "lane detection"
     if abs(right_curverad - right_curverad_prior) < 100:
       matching_count_right += 1
       right = Line(right_lane_x, right_lane_y, right_fitx)
@@ -470,9 +392,7 @@ def pipeline(image):
     else:
       right = right_lane_prior
 
-    # y_pts_left = left_lane_y
-    # y_pts_right = right_lane_y
-
+    #these values are set for the class instances
     y_pts_left = left.ally
     y_pts_right = right.ally
     x_pts_left = left.allx
@@ -480,16 +400,24 @@ def pipeline(image):
     left_fitx = left.fitx
     right_fitx = right.fitx
 
+    #set values of the current frame as "prior" values for the next frame
     left_curverad_prior = left_curverad
     right_curverad_prior = right_curverad
     left_lane_prior = left
     right_lane_prior = right
 
+    #calculates values for 2nd degree polynomial
     left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
     right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
 
+  #for the rest of the frames after the first ones we use the position of the detected lane in the prior frame as
+  #a starting point for pixels detection. If there is "high confidence" of lanes detection in the prior ten frames 
+  #then a "window" around the prior lanes positions is drafted and only pixels within that window are 
+  #considered as part of the lanes. (so, no histogram search, but "nonzero" approach for pixels detection)
   else:
-    if matching_count_left>=5 & matching_count_right>=5:
+    #matching_count is how many times in the prior ten frames the lanes where detected. It's considered as a value of "high confidence"
+    #for subsequent frames it also evaluates that in the "prior" frame the "nonzero" values where not empty.
+    if matching_count_left>=5 & matching_count_right>=5 and left_lane_prior.fitx != [] and right_lane_prior.fitx !=[]:
       maximum_x_left = np.max(left_lane_prior.allx)
       minimum_x_left = np.min(left_lane_prior.allx)
 
@@ -499,34 +427,29 @@ def pipeline(image):
       vertices_left = np.array([[ (minimum_x_left-50, 720), (minimum_x_left-50, 0), (maximum_x_left+50, 0), (maximum_x_left+50, 720)]])
       vertices_right = np.array([[ (minimum_x_right-50, 720), (minimum_x_right-50, 0), (maximum_x_right+50, 0), (maximum_x_right+50, 720)]])
       
+      #masking an area (a rectangle) around the prior lanes detected)
       masked_rectangle_left = region_of_interest(warped_img, vertices_left)
       y_pts_left, x_pts_left = np.nonzero(masked_rectangle_left)
       y_pts_left = np.array(y_pts_left)
       x_pts_left = np.array(x_pts_left)
-
-      # plt.imshow(masked_rectangle_left)
-      # plt.show()
-      # plt.imshow(masked_rectangle_left)
-      # plt.plot(x_pts_left, y_pts_left, 'o', color='yellow')
-
 
       masked_rectangle_right = region_of_interest(warped_img, vertices_right)
       y_pts_right, x_pts_right = np.nonzero(masked_rectangle_right)
       y_pts_right = np.array(y_pts_right)
       x_pts_right = np.array(x_pts_right)
 
+      #fit a polynomial for the pixels detected
       left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
       left_fitx = left_fit[0]*y_pts_left**2 + left_fit[1]*y_pts_left + left_fit[2]
-
 
       right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
       right_fitx = right_fit[0]*y_pts_right**2 + right_fit[1]*y_pts_right + right_fit[2]
 
-      # plt.imshow(warped_img)
-      # plt.plot(x_pts_right, y_pts_right, 'o', color='yellow')
-      # plt.plot(right_fitx, y_pts_right, color='green', linewidth=3)
-      # plt.show()
+      #set the current lanes as "prior" for the following frames
+      left_lane_prior = Line(x_pts_left, y_pts_left,left_fitx)
+      right_lane_prior = Line(x_pts_right, y_pts_right, right_fitx)
 
+      #calculates curvature and car position values
       left_curverad, right_curverad = radius(x_pts_left, y_pts_left, x_pts_right, y_pts_right)
 
       right_fitx_position = right_fit[0]*715**2 + right_fit[1]*715 + right_fit[2]
@@ -534,9 +457,8 @@ def pipeline(image):
       middle_lane = left_fitx_position + (right_fitx_position - left_fitx_position)/2
       
       car_position = (640-middle_lane)*(3.7/700)
-      # print(left_fitx)
-      # plt.plot(right_fitx, y_pts_right, color='green', linewidth=3)
-      # plt.show()
+
+    #if no "high confidence" in the first frames is achieved, then we use the "histogram" search approach for pixels detection
     else:
       left_lane_x, left_lane_y, right_lane_x, right_lane_y, left_fitx, right_fitx, car_position= lines_pixels(warped_img)
       left_curverad, right_curverad = radius(left_lane_x, left_lane_y, right_lane_x, right_lane_y)
@@ -549,27 +471,29 @@ def pipeline(image):
       left_fit = np.polyfit(y_pts_left, x_pts_left, 2)
       right_fit = np.polyfit(y_pts_right, x_pts_right, 2)
 
-  result =draw_on_img(warped_img, img, image, left_fit, right_fit, y_pts_left, y_pts_right)
 
+  result = draw_on_img(warped_img, img, image, left_fit, right_fit, y_pts_left, y_pts_right)
 
-  cv2.putText(result, "Left curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
-  cv2.putText(result, "Right curvature: %.2f m" %right_curverad, (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+  # draws values for curvature and car position for each video frame
+  cv2.putText(result, "Lane curvature: %.2f m" %left_curverad, (50, 70), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   if car_position<0:
-    cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+    cv2.putText(result, "Car is left of center by: %.2f m" %abs(car_position), (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   else:
-    cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 170), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
+    cv2.putText(result, "Car is right of center by: %.2f m" %abs(car_position), (50, 120), cv2.FONT_HERSHEY_DUPLEX, 1.3, (255, 255, 255), 2)
   
   return result 
   
 
 
-
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
-vid_output = 'test_video.mp4'
+vid_output = 'project_video.mp4'
 clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #4 (Advanced Lane Finding)/CarND-Advanced-Lane-Lines/project_video.mp4')
-
-n_frames = sum(1 for x in clip1.iter_frames())
-
 vid_clip = clip1.fl_image(pipeline) 
 vid_clip.write_videofile(vid_output, audio=False)
+
+
+# for i in range(0,6):
+#   image_pipeline(images[i])
+#   plt.savefig('output_images/test{}_original_with_area.jpg'.format(i+1))
+#   plt.show()
