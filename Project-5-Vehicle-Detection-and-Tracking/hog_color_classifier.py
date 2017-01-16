@@ -15,11 +15,11 @@ from sklearn.model_selection import train_test_split
 
 #import from pickle non-vehicle images
 with open('non_vehicle.pickle', 'rb') as handle:
-    non_vehicle = pickle.load(handle)
+    non_vehicles = pickle.load(handle)
 
 #import from pickle car images
 with open('car.pickle', 'rb') as handle:
-    car = pickle.load(handle)
+    cars = pickle.load(handle)
 
 
 def color_hist(img, nbins=32, bins_range=(0, 256)):
@@ -65,7 +65,7 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
         return features
 
 # # Plot HOG:
-# gray = cv2.cvtColor((car[0]), cv2.COLOR_RGB2GRAY)
+# gray = cv2.cvtColor((cars[0]), cv2.COLOR_RGB2GRAY)
 # features, hog_image = get_hog_features(gray, orient=9, pix_per_cell=8, cell_per_block=2,vis=True,feature_vec=False)
 # plt.imshow(hog_image, cmap='gray')
 # plt.show()
@@ -111,11 +111,11 @@ pix_per_cell = 8
 cell_per_block = 2
 
 #Create list of feature vectors for cars:
-car_features = extract_features(car, cspace='RGB', spatial_size=(32, 32),
+car_features = extract_features(cars, cspace='RGB', spatial_size=(32, 32),
                         hist_bins=32, hist_range=(0, 256), orient=orient, 
                         pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=0)
 #Create list of feature vectors for non-cars:
-notcar_features = extract_features(non_vehicle, cspace='RGB', spatial_size=(32, 32),
+notcar_features = extract_features(non_vehicles, cspace='RGB', spatial_size=(32, 32),
                         hist_bins=32, hist_range=(0, 256), orient=orient, 
                         pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=0)
 
@@ -138,9 +138,11 @@ rand_state = np.random.randint(0, 100)
 X_train, X_test, y_train, y_test = train_test_split(
     scaled_X, y, test_size=0.2, random_state=rand_state)
 
+############
+#Uncomment this out to train the model
 #Create a classifier and train it on the training set:
 # Use a linear SVC 
-svc = LinearSVC()
+svc = LinearSVC(max_iter=10000)
 # Check the training time for the SVC
 t=time.time()
 svc.fit(X_train, y_train)
@@ -156,3 +158,120 @@ t=time.time()
 prediction = svc.predict(X_test[0].reshape(1, -1))
 t2 = time.time()
 print(t2-t, 'Seconds to predict with SVC')
+
+#Save the trained model
+from sklearn.externals import joblib
+joblib.dump(svc, 'saved_model.pkl') 
+#############
+
+#Reload saved model:
+from sklearn.externals import joblib
+saved_svc = joblib.load('saved_model.pkl') 
+#make new prediction:
+# new_prediction = saved_svc.predict(X_test[100].reshape(1, -1))
+# print("New Prediction: ", new_prediction)
+
+#######################
+#Sliding window:
+
+image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/test5.jpg')
+
+
+def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
+    '''
+    draws rectangular boxes based on given vertices
+    '''
+    # Make a copy of the image
+    imcopy = np.copy(img)
+    # Iterate through the bounding boxes
+    for bbox in bboxes:
+        # Draw a rectangle given bbox coordinates
+        cv2.rectangle(imcopy, bbox[0], bbox[1], color, thick)
+    # Return the image copy with boxes drawn
+    return imcopy
+
+
+def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], 
+                    xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
+    '''
+    creates sliding windows throughout the whole image. It outputs a list of vertices to be used to create rectangular boxes
+    '''
+    # If x and/or y start/stop positions not defined, set to image size
+    if x_start_stop==[None, None]:
+      x_start_stop = [0,img.shape[1]]
+    if y_start_stop==[None, None]:
+      y_start_stop = [0,img.shape[0]]
+    # Compute the span of the region to be searched   
+    
+    # Compute the number of pixels per step in x/y
+    nx_pix_per_step = np.int(xy_window[0]*(1 - xy_overlap[0]))
+    ny_pix_per_step = np.int(xy_window[1]*(1 - xy_overlap[1]))
+    # Compute the number of windows in x/y
+    num_wind_x = np.int((x_start_stop[1] - x_start_stop[0])/nx_pix_per_step)-1
+    num_wind_y = np.int((y_start_stop[1] - y_start_stop[0])/ny_pix_per_step)-1
+    # num_wind_x = int(x_start_stop[1]/(xy_window[0]*xy_overlap[0]))-1
+    # num_wind_y = int(y_start_stop[1]/(xy_window[1]*xy_overlap[1]))-1
+    
+    
+    # Initialize a list to append window positions to
+    window_list = []
+    # Loop through finding x and y window positions
+    #     Note: you could vectorize this step, but in practice
+    #     you'll be considering windows one by one with your
+    #     classifier, so looping makes sense
+        # Calculate each window position
+        # Append window position to list
+    for iter_x in range(num_wind_x):
+        for iter_y in range(num_wind_y):
+            beg_x = nx_pix_per_step*iter_x + x_start_stop[0]
+            beg_y = ny_pix_per_step*iter_y + y_start_stop[0]
+            end_x = beg_x + xy_window[0]
+            end_y = beg_y + xy_window[1]
+            points = ((beg_x,beg_y),(end_x,end_y))
+            window_list.append(points)
+    # Return the list of windows
+    return window_list
+
+windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[None, None], 
+                    xy_window=(128, 128), xy_overlap=(0.5, 0.5))
+
+
+def check_single_wind(image):
+  detected_boxes = []
+  for one_wind in windows:
+    # one_wind = [one_wind]
+    y1 = one_wind[0][1]
+    y2 = one_wind[1][1]
+    x1 = one_wind[0][0]
+    x2 = one_wind[1][0]
+    crop_img = image[y1:y2,x1:x2]
+    resized = cv2.resize(crop_img,(64,64))
+    res_feat = extract_features([resized], cspace='RGB', spatial_size=(32, 32),
+                        hist_bins=32, hist_range=(0, 256), orient=9, 
+                        pix_per_cell=8, cell_per_block=2, hog_channel=0)
+    new_prediction = saved_svc.predict(res_feat)
+    if (new_prediction[0]) ==1.0:
+      detected_boxes.append(one_wind)
+  window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
+  plt.imshow(window_img)
+  plt.show()
+
+check_single_wind(image)
+# plt.show()
+
+###########
+# one_wind = [(windows[1])]
+#crop image
+# crop_img = img[y: y + h, x: x + w]
+# y1 = one_wind[0][0][1]
+# y2 = one_wind[0][1][1]
+# x1 = one_wind[0][0][0]
+# x2 = one_wind[0][1][0]
+# crop_img = image[y1:y2,x1:x2]
+#  RESIZE TO 64x64 BEFORE FEEDING CLASSIFIER
+
+# #draw the boxes:                       
+# window_img = draw_boxes(image, one_wind, color=(0, 0, 255), thick=6)                    
+# plt.imshow(window_img)
+# # plt.imshow(crop_img)
+# plt.show()
