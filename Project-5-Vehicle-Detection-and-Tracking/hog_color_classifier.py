@@ -5,7 +5,10 @@ import pickle
 import cv2
 import glob
 import time
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
+from sklearn import svm
+from sklearn.model_selection import GridSearchCV
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from sklearn.model_selection import train_test_split
@@ -107,7 +110,7 @@ def extract_features(imgs, cspace='RGB', spatial_size=(32, 32),
     return features
 
 orient = 9
-pix_per_cell = 8
+pix_per_cell = 4
 cell_per_block = 2
 
 #Create list of feature vectors for cars:
@@ -142,33 +145,41 @@ X_train, X_test, y_train, y_test = train_test_split(
 #Uncomment this out to train the model
 #Create a classifier and train it on the training set:
 # Use a linear SVC 
-svc = LinearSVC(max_iter=10000)
+#****Prefer dual=False when n_samples > n_features***
+clf = LinearSVC(penalty='l1',dual=False, C=100) 
+# clf = SVC()
+
 # Check the training time for the SVC
 t=time.time()
-svc.fit(X_train, y_train)
+clf.fit(X_train, y_train)
 t2 = time.time()
 print(t2-t, 'Seconds to train SVC...')
 # Check the score of the SVC
-print('Train Accuracy of SVC = ', svc.score(X_train, y_train))
+print('Train Accuracy of SVC = ', clf.score(X_train, y_train))
 
 #Find out test accuracy on the test set and predict a single example:
-print('Test Accuracy of SVC = ', svc.score(X_test, y_test))
+print('Test Accuracy of SVC = ', clf.score(X_test, y_test))
 # Check the prediction time for a single sample
 t=time.time()
-prediction = svc.predict(X_test[0].reshape(1, -1))
+prediction = clf.predict(X_test[0].reshape(1, -1))
 t2 = time.time()
 print(t2-t, 'Seconds to predict with SVC')
 
 #Save the trained model
 from sklearn.externals import joblib
-joblib.dump(svc, 'saved_model.pkl') 
+joblib.dump(clf, 'saved_model.pkl') 
+#saving the scaler:
+joblib.dump(X_scaler, 'saved_scaler.pkl') 
+
+
 #############
 
 #Reload saved model:
 from sklearn.externals import joblib
-saved_svc = joblib.load('saved_model.pkl') 
+saved_clf = joblib.load('saved_model.pkl') 
+saved_scaler = joblib.load('saved_scaler.pkl')
 #make new prediction:
-# new_prediction = saved_svc.predict(X_test[100].reshape(1, -1))
+# new_prediction = saved_clf.predict(X_test[100].reshape(1, -1))
 # print("New Prediction: ", new_prediction)
 
 #######################
@@ -233,7 +244,7 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     return window_list
 
 windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[None, None], 
-                    xy_window=(128, 128), xy_overlap=(0.5, 0.5))
+                    xy_window=(132, 132), xy_overlap=(0.8, 0.8))
 
 
 def check_single_wind(image):
@@ -248,8 +259,9 @@ def check_single_wind(image):
     resized = cv2.resize(crop_img,(64,64))
     res_feat = extract_features([resized], cspace='RGB', spatial_size=(32, 32),
                         hist_bins=32, hist_range=(0, 256), orient=9, 
-                        pix_per_cell=8, cell_per_block=2, hog_channel=0)
-    new_prediction = saved_svc.predict(res_feat)
+                        pix_per_cell=4, cell_per_block=2, hog_channel=0)
+    res_feat_norm = saved_scaler.transform(res_feat)
+    new_prediction = saved_clf.predict(res_feat_norm)
     if (new_prediction[0]) ==1.0:
       detected_boxes.append(one_wind)
   window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
