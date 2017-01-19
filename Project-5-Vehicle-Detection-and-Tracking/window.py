@@ -103,13 +103,13 @@ def extract_features(imgs, cspace='RGB', spatial_size=(32, 32),
     return features
 
 from sklearn.externals import joblib
-saved_clf = joblib.load('saved_model2.pkl') 
-saved_scaler = joblib.load('saved_scaler2.pkl')
+saved_clf = joblib.load('saved_model3.pkl') 
+saved_scaler = joblib.load('saved_scaler3.pkl')
 
 #Sliding window:
 # for count in range(720,730):
 # image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame%d.jpg' %count)
-image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame730.jpg')
+image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame870.jpg')
 
 
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
@@ -235,7 +235,6 @@ def single_detected_boxes(image, windows, detected_boxes=[]):
     res_feat_norm = saved_scaler.transform(res_feat)
     new_prediction = saved_clf.predict(res_feat_norm)
     confidence_scores = saved_clf.decision_function(res_feat_norm)
-
     if (new_prediction[0]) ==1.0 and confidence_scores>[1.0]:
       # one_wind_flatten = sum(one_wind, ())
       # detected_boxes.append(one_wind_flatten)
@@ -321,20 +320,19 @@ binary = color_blue_filter(window_filled)
 ret, thresh = cv2.threshold(binary.astype(np.uint8) * 255, 127, 255, 0)
 im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-#areas within conoturs:
-areas = [cv2.contourArea(c) for c in contours]
 
 #draw rectangle over the detected contour areas and centroid of rectangle:
-for i in range(0,len(areas)):
-  #filter small areas that could be deceiving
-  if areas[i] > 5:
-    cnt=contours[i]
+for contour in contours:
+  #calculate area of contour and remove small areas that could be deceiving:
+  if cv2.contourArea(contour) > 20:
+    cnt = contour
     x,y,w,h = cv2.boundingRect(cnt)
     cv2.rectangle(window_img,(x,y),(x+w,y+h),(0,255,0),2)
     centroidx = (x+w/2)
     centroidy = (y+h/2)
     cv2.circle(window_img, (centroidx, centroidy), 10, (0, 255, 0), -1)
-
+    centroid = (centroidx,centroidy)
+    print(centroid)
 # cv2.drawContours(window_img, contours, -1, (0,255,0), 3)
 
 plt.imshow(window_img)
