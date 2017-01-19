@@ -8,6 +8,7 @@ import imutils
 from imutils.object_detection import non_max_suppression
 import glob
 import time
+import scipy
 from sklearn.svm import LinearSVC, SVC
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV
@@ -15,6 +16,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from sklearn.model_selection import train_test_split
+
 
 def color_hist(img, nbins=32, bins_range=(0, 256)):
   '''
@@ -101,12 +103,13 @@ def extract_features(imgs, cspace='RGB', spatial_size=(32, 32),
     return features
 
 from sklearn.externals import joblib
-saved_clf = joblib.load('saved_model.pkl') 
-saved_scaler = joblib.load('saved_scaler.pkl')
+saved_clf = joblib.load('saved_model2.pkl') 
+saved_scaler = joblib.load('saved_scaler2.pkl')
 
 #Sliding window:
-
-image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/test5.jpg')
+# for count in range(720,730):
+# image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame%d.jpg' %count)
+image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame730.jpg')
 
 
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
@@ -164,13 +167,60 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     # Return the list of windows
     return window_list
 
-windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 500], 
-                    xy_window=(120, 80), xy_overlap=(0.8, 0.8))
+# ############
+#currently not used: (only for one type of window dimension)
+# windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 700], 
+#                     xy_window=(200, 200), xy_overlap=(0.8, 0.8))
+
+# def check_single_wind(image, windows):
+#   detected_boxes = []
+#   for one_wind in windows:
+#     # one_wind = [one_wind]
+#     y1 = one_wind[0][1]
+#     y2 = one_wind[1][1]
+#     x1 = one_wind[0][0]
+#     x2 = one_wind[1][0]
+#     crop_img = image[y1:y2,x1:x2]
+#     resized = cv2.resize(crop_img,(64,64))
+#     res_feat = extract_features([resized], cspace='RGB', spatial_size=(32, 32),
+#                         hist_bins=32, hist_range=(0, 256), orient=9, 
+#                         pix_per_cell=4, cell_per_block=2, hog_channel=0)
+#     res_feat_norm = saved_scaler.transform(res_feat)
+#     new_prediction = saved_clf.predict(res_feat_norm)
+#     confidence_scores = saved_clf.decision_function(res_feat_norm)
+
+#     if (new_prediction[0]) ==1.0 and confidence_scores>[1.0]:
+#       detected_boxes.append(one_wind)
+#       # print(confidence_scores)
+#   window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
+#   plt.imshow(window_img)
+#   plt.show()
+#   # return window_img
+#   ###########
+#   #working suppression but not great
+#   #     one_wind_flatten = sum(one_wind, ())
+#   #     detected_boxes.append(one_wind_flatten)
+#   # bounding_boxes = []
+#   # detected_boxes = np.array(detected_boxes)
+#   # pick = non_max_suppression(detected_boxes, probs=None, overlapThresh=0)
+#   # for (xA, yA, xB, yB) in pick:
+#   #   xmin = min(xA,xB)
+#   #   ymin = min(yA,yB)
+#   #   xmax = max(xA,xB)
+#   #   ymax = max(yA,yB)
+#   #   bounding_boxes.append(((xmin,ymin),(xmax,ymax)))
+#   # window_img = draw_boxes(image, bounding_boxes, color=(0, 0, 255), thick=6)
+#   # plt.imshow(window_img)
+#   # plt.show()
+#   # return window_img
+#   #######
+
+# check_single_wind(image, windows)
+
+# ############
 
 
-
-def check_single_wind(image):
-  detected_boxes = []
+def single_detected_boxes(image, windows, detected_boxes=[]):
   for one_wind in windows:
     # one_wind = [one_wind]
     y1 = one_wind[0][1]
@@ -187,17 +237,14 @@ def check_single_wind(image):
     confidence_scores = saved_clf.decision_function(res_feat_norm)
 
     if (new_prediction[0]) ==1.0 and confidence_scores>[1.0]:
-      # detected_boxes.append(one_wind)
-      # one_wind_flatten = [element for tupl in one_wind for element in tupl]
-      # print(confidence_scores)
-  # window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
-  # plt.imshow(window_img)
-  # plt.show()
-  # return window_img
-  ###########
-  #working suppression but not great
-      one_wind_flatten = sum(one_wind, ())
-      detected_boxes.append(one_wind_flatten)
+      # one_wind_flatten = sum(one_wind, ())
+      # detected_boxes.append(one_wind_flatten)
+      detected_boxes.append(one_wind)
+  print(detected_boxes)
+  return detected_boxes
+
+
+def duplicate_suppression(image, detected_boxes):
   bounding_boxes = []
   detected_boxes = np.array(detected_boxes)
   pick = non_max_suppression(detected_boxes, probs=None, overlapThresh=0)
@@ -208,35 +255,97 @@ def check_single_wind(image):
     ymax = max(yA,yB)
     bounding_boxes.append(((xmin,ymin),(xmax,ymax)))
   window_img = draw_boxes(image, bounding_boxes, color=(0, 0, 255), thick=6)
-  # plt.imshow(window_img)
-  # plt.show()
+  plt.imshow(window_img)
+  plt.show()
   return window_img
-  #######
-check_single_wind(image)
+
+def color_blue_filter(image):
+  B = image[:,:,2]
+  thresh = (254, 255)
+  binary = np.zeros_like(B)
+  binary[(B > thresh[0]) & (B <= thresh[1])] = 1
+  return binary
+
+# def pipeline(image):
+#   # windows_medium = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 500], 
+#   #                     xy_window=(120, 80), xy_overlap=(0.8, 0.8))
+
+#   # detected_boxes = (single_detected_boxes(image, windows_medium))
+
+#   # windows_small = slide_window(image, x_start_stop=[500, 1000], y_start_stop=[400, 450], 
+#   #                     xy_window=(20, 20), xy_overlap=(0.8, 0.8))
+#   # detected_boxes = (single_detected_boxes(image, windows_small))
+
+#   windows_semi = slide_window(image, x_start_stop=[500, 1000], y_start_stop=[400, 500], 
+#                       xy_window=(50, 40), xy_overlap=(0.8, 0.8))
+#   # detected_boxes = (single_detected_boxes(image, windows_semi))
+
+#   windows_big = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 700], 
+#                       xy_window=(200, 200), xy_overlap=(0.8, 0.8))
+#   combined = windows_semi+windows_big
+#   detected_boxes = (single_detected_boxes(image, combined))
+
+#   result = duplicate_suppression(image, detected_boxes)
+#   return result
+
+# pipeline(image)  
+
+
+# ############
+# # single image: (comment line 237, 238; uncomment line 239)
+windows_medium = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 500], 
+                      xy_window=(120, 80), xy_overlap=(0.8, 0.8))
+
+# # detected_boxes = (single_detected_boxes(image, windows_medium))
+
+# # windows_small = slide_window(image, x_start_stop=[500, 1000], y_start_stop=[400, 450], 
+# #                     xy_window=(20, 20), xy_overlap=(0.8, 0.8))
+# # detected_boxes = (single_detected_boxes(image, windows_small))
+
+windows_semi = slide_window(image, x_start_stop=[700, 1100], y_start_stop=[400, 480], 
+                    xy_window=(50, 40), xy_overlap=(0.65, 0.65))
+# detected_boxes = (single_detected_boxes(image, windows_semi))
+
+windows_big = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 650], 
+                    xy_window=(200, 200), xy_overlap=(0.8, 0.8))
+combined = windows_medium+windows_big+windows_semi
+detected_boxes = (single_detected_boxes(image, combined))
+
+window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
+
+#fill up the intersecting rectangles so to create a full area:
+window_filled = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=-1)
+#filter for blue color (color of the filled area) and create binary image:
+binary = color_blue_filter(window_filled)
+
+ret, thresh = cv2.threshold(binary.astype(np.uint8) * 255, 127, 255, 0)
+im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+#areas within conoturs:
+areas = [cv2.contourArea(c) for c in contours]
+
+#draw rectangle over the detected contour areas and centroid of rectangle:
+for i in range(0,len(areas)):
+  #filter small areas that could be deceiving
+  if areas[i] > 5:
+    cnt=contours[i]
+    x,y,w,h = cv2.boundingRect(cnt)
+    cv2.rectangle(window_img,(x,y),(x+w,y+h),(0,255,0),2)
+    centroidx = (x+w/2)
+    centroidy = (y+h/2)
+    cv2.circle(window_img, (centroidx, centroidy), 10, (0, 255, 0), -1)
+
+# cv2.drawContours(window_img, contours, -1, (0,255,0), 3)
+
+plt.imshow(window_img)
+plt.show()
+# count+=1
+####################
 
 #VIDEO:
-from moviepy.editor import VideoFileClip
-from IPython.display import HTML
-vid_output = 'detection_video.mp4'
-clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/project_video.mp4')
-vid_clip = clip1.fl_image(check_single_wind) 
-vid_clip.write_videofile(vid_output, audio=False)
-
-# plt.show()
-
-###########
-# one_wind = [(windows[1])]
-#crop image
-# crop_img = img[y: y + h, x: x + w]
-# y1 = one_wind[0][0][1]
-# y2 = one_wind[0][1][1]
-# x1 = one_wind[0][0][0]
-# x2 = one_wind[0][1][0]
-# crop_img = image[y1:y2,x1:x2]
-#  RESIZE TO 64x64 BEFORE FEEDING CLASSIFIER
-
-# #draw the boxes:                       
-# window_img = draw_boxes(image, one_wind, color=(0, 0, 255), thick=6)                    
-# plt.imshow(window_img)
-# # plt.imshow(crop_img)
-# plt.show()
+# from moviepy.editor import VideoFileClip
+# from IPython.display import HTML
+# vid_output = 'detection_video.mp4'
+# clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/project_video.mp4')
+# vid_clip = clip1.fl_image(pipeline) 
+# vid_clip.write_videofile(vid_output, audio=False)
