@@ -109,7 +109,7 @@ saved_scaler = joblib.load('saved_scaler3.pkl')
 #Sliding window:
 # for count in range(720,730):
 # image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame%d.jpg' %count)
-image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame870.jpg')
+image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame2.jpg')
 
 
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
@@ -220,7 +220,8 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
 # ############
 
 
-def single_detected_boxes(image, windows, detected_boxes=[]):
+def single_detected_boxes(image, windows):
+  detected_boxes=[]
   for one_wind in windows:
     # one_wind = [one_wind]
     y1 = one_wind[0][1]
@@ -310,32 +311,31 @@ windows_big = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 
 combined = windows_medium+windows_big+windows_semi
 detected_boxes = (single_detected_boxes(image, combined))
 
-window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
+# window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
 
 #fill up the intersecting rectangles so to create a full area:
 window_filled = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=-1)
 #filter for blue color (color of the filled area) and create binary image:
-binary = color_blue_filter(window_filled)
-
-ret, thresh = cv2.threshold(binary.astype(np.uint8) * 255, 127, 255, 0)
-im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+if detected_boxes != []:
+  binary = color_blue_filter(window_filled)
+  ret, thresh = cv2.threshold(binary.astype(np.uint8) * 255, 127, 255, 0)
+  im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 #draw rectangle over the detected contour areas and centroid of rectangle:
-for contour in contours:
-  #calculate area of contour and remove small areas that could be deceiving:
-  if cv2.contourArea(contour) > 20:
-    cnt = contour
-    x,y,w,h = cv2.boundingRect(cnt)
-    cv2.rectangle(window_img,(x,y),(x+w,y+h),(0,255,0),2)
-    centroidx = (x+w/2)
-    centroidy = (y+h/2)
-    cv2.circle(window_img, (centroidx, centroidy), 10, (0, 255, 0), -1)
-    centroid = (centroidx,centroidy)
-    print(centroid)
+  for contour in contours:
+    #calculate area of contour and remove small areas that could be deceiving:
+    if cv2.contourArea(contour) > 20:
+      cnt = contour
+      x,y,w,h = cv2.boundingRect(cnt)
+      cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
+      centroidx = (x+w/2)
+      centroidy = (y+h/2)
+      cv2.circle(image, (centroidx, centroidy), 10, (0, 255, 0), -1)
+      centroid = (centroidx,centroidy)
+      print(centroid)
 # cv2.drawContours(window_img, contours, -1, (0,255,0), 3)
 
-plt.imshow(window_img)
+plt.imshow(image)
 plt.show()
 # count+=1
 ####################
