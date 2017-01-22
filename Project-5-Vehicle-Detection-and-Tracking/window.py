@@ -109,7 +109,7 @@ saved_scaler = joblib.load('saved_scaler3.pkl')
 #Sliding window:
 # for count in range(720,730):
 # image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame%d.jpg' %count)
-image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame2.jpg')
+image = mpimg.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame750.jpg')
 
 
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
@@ -263,6 +263,7 @@ def color_blue_filter(image):
   B = image[:,:,2]
   thresh = (254, 255)
   binary = np.zeros_like(B)
+  # binary[(B == thresh[1])]=1
   binary[(B > thresh[0]) & (B <= thresh[1])] = 1
   return binary
 
@@ -290,11 +291,11 @@ def color_blue_filter(image):
 
 # pipeline(image)  
 
-
+t=time.time()
 # ############
 # # single image: (comment line 237, 238; uncomment line 239)
-windows_medium = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 500], 
-                      xy_window=(120, 80), xy_overlap=(0.8, 0.8))
+windows_medium = slide_window(image, x_start_stop=[200, 1280], y_start_stop=[450, 550], 
+                      xy_window=(120, 80), xy_overlap=(0.75, 0.75))
 
 # # detected_boxes = (single_detected_boxes(image, windows_medium))
 
@@ -302,48 +303,105 @@ windows_medium = slide_window(image, x_start_stop=[None, None], y_start_stop=[40
 # #                     xy_window=(20, 20), xy_overlap=(0.8, 0.8))
 # # detected_boxes = (single_detected_boxes(image, windows_small))
 
-windows_semi = slide_window(image, x_start_stop=[700, 1100], y_start_stop=[400, 480], 
+windows_small = slide_window(image, x_start_stop=[700, 1100], y_start_stop=[400, 480], 
                     xy_window=(50, 40), xy_overlap=(0.65, 0.65))
 # detected_boxes = (single_detected_boxes(image, windows_semi))
 
-windows_big = slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 650], 
+windows_big = slide_window(image, x_start_stop=[200, 1280], y_start_stop=[400, 650], 
                     xy_window=(200, 200), xy_overlap=(0.8, 0.8))
-combined = windows_medium+windows_big+windows_semi
+combined = windows_medium+windows_big+windows_small
 detected_boxes = (single_detected_boxes(image, combined))
 
-# window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
+window_img = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=6)
+
 
 #fill up the intersecting rectangles so to create a full area:
-window_filled = draw_boxes(image, detected_boxes, color=(0, 0, 255), thick=-1)
-#filter for blue color (color of the filled area) and create binary image:
-if detected_boxes != []:
-  binary = color_blue_filter(window_filled)
-  ret, thresh = cv2.threshold(binary.astype(np.uint8) * 255, 127, 255, 0)
-  im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+image_copy = np.zeros_like(image)
+window_filled = draw_boxes(image_copy, detected_boxes, color=(0, 0, 255), thick=-1)
 
-#draw rectangle over the detected contour areas and centroid of rectangle:
-  for contour in contours:
-    #calculate area of contour and remove small areas that could be deceiving:
-    if cv2.contourArea(contour) > 20:
-      cnt = contour
-      x,y,w,h = cv2.boundingRect(cnt)
-      cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
-      centroidx = (x+w/2)
-      centroidy = (y+h/2)
-      cv2.circle(image, (centroidx, centroidy), 10, (0, 255, 0), -1)
-      centroid = (centroidx,centroidy)
-      print(centroid)
-# cv2.drawContours(window_img, contours, -1, (0,255,0), 3)
 
-plt.imshow(image)
+# hsv = cv2.cvtColor(window_filled, cv2.COLOR_RGB2HSV)
+# mask = cv2.inRange(hsv, (110,50,50), (130,255,255))
+# # res = cv2.bitwise_and(window_filled,window_filled, mask= mask)
+# mask = cv2.erode(mask, None, iterations=2)
+# mask = cv2.dilate(mask, None, iterations=2)
+from skimage.color import rgb2gray
+
+
+
+# heat_map = np.zeros_like(image)
+
+# for (x1, y1, x2, y2) in detected_boxes:
+#         heat_map[y1:y2,x1:x2] += 10
+        
+# print(heat_map[400:480,828:948])
+
+# import heatmap
+# hm = heatmap.Heatmap()
+# pts =np.array(detected_boxes[0])
+# output = hm.heatmap(pts,size=(1280, 720), area = ((0, 0), (1280, 720)))
+
+# overlay = image.copy()
+# output = image.copy()
+# alpha = 0.6
+# for i in detected_boxes:
+
+#   cv2.rectangle(overlay, i[0], i[1],
+#       (0, 0, 255), -1)
+#   cv2.addWeighted(overlay, alpha, output, 1 - alpha,
+#       0, output)
+
+# binary = color_blue_filter(output)
+# from skimage import data
+from skimage.feature import blob_dog, blob_log, blob_doh
+
+# print(heat_map[:,:,0])
+
+# print(image_gray*10)
+# # blobs_dog = blob_dog(image_gray, max_sigma=30, threshold=.1)
+
+# y, x, r = blob_doh(image_gray, max_sigma= 500, threshold=0.01, min_sigma=0.01)
+# print(y[1])
+# c = plt.Circle((x, y), r, color='red', linewidth=2, fill=False)
+# x=[]
+# for i in detected_boxes:
+#   x.append(i[0])
+#   x.append(i[2])
+
+# y=[]
+# for i in detected_boxes:
+#   y.append(i[1],)
+#   y.append(i[3])
+# print(x)
+# print(y)
+# heatmap, xedges, yedges = np.histogram2d(x,y, bins=10)
+# extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
+# #filter for blue color (color of the filled area) and create binary image:
+# if detected_boxes != []:
+binary = color_blue_filter(window_filled)
+ret, thresh = cv2.threshold(binary.astype(np.uint8) * 255, 127, 255, 0)
+im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+# print(contours)
+# # #draw rectangle over the detected contour areas and centroid of rectangle:
+for contour in contours:
+#     #calculate area of contour and remove small areas that could be deceiving:
+    # if cv2.contourArea(contour) > 20:
+    cnt = contour
+    x,y,w,h = cv2.boundingRect(cnt)
+    cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
+    centroidx = (x+w/2)
+    centroidy = (y+h/2)
+    cv2.circle(image, (centroidx, centroidy), 10, (0, 255, 0), -1)
+    centroid = (centroidx,centroidy)
+    print(centroid)
+    cv2.drawContours(image, contour, -1, (0,255,0), 3)
+
+plt.imshow(window_img)#, cmap='gray')
+t2=time.time()
+print(t2-t)
 plt.show()
-# count+=1
+
 ####################
 
-#VIDEO:
-# from moviepy.editor import VideoFileClip
-# from IPython.display import HTML
-# vid_output = 'detection_video.mp4'
-# clip1 = VideoFileClip('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/project_video.mp4')
-# vid_clip = clip1.fl_image(pipeline) 
-# vid_clip.write_videofile(vid_output, audio=False)
+
