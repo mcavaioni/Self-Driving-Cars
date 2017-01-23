@@ -12,16 +12,17 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from sklearn.model_selection import train_test_split
+# from skimage.color import rgb2ycbcr
 # from sklearn.cross_validation import train_test_split
 
 #.astype('uint8'))
 
 #import from pickle non-vehicle images
-with open('non_vehicle.pickle', 'rb') as handle:
+with open('non_vehicle4.pickle', 'rb') as handle:
     non_vehicles = pickle.load(handle)
 
 #import from pickle car images
-with open('car.pickle', 'rb') as handle:
+with open('car4.pickle', 'rb') as handle:
     cars = pickle.load(handle)
 
 
@@ -73,9 +74,9 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
 # plt.imshow(hog_image, cmap='gray')
 # plt.show()
 
-def extract_features(imgs, cspace='RGB', spatial_size=(32, 32),
+def extract_features(imgs, cspace='YCrCb', spatial_size=(32, 32),
                         hist_bins=32, hist_range=(0, 256), orient=9, 
-                        pix_per_cell=8, cell_per_block=2, hog_channel=0):
+                        pix_per_cell=8, cell_per_block=2):
     '''
     Combines features from a list of images. 
     Features include: binned colors, histogram of colors, histogram of oriented gradient (HOG)
@@ -96,31 +97,40 @@ def extract_features(imgs, cspace='RGB', spatial_size=(32, 32),
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
             elif cspace == 'YUV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+            elif cspace == 'YCrCb':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCR_CB)
         else: feature_image = np.copy(image)      
         # Apply bin_spatial() to get spatial color features
         spatial_features = bin_spatial(feature_image, size=spatial_size)
         # Apply color_hist() also with a color space option now
         hist_features = color_hist(feature_image, nbins=hist_bins, bins_range=hist_range)
         # Call get_hog_features() with vis=False, feature_vec=True
-        hog_features = get_hog_features(feature_image[:,:,hog_channel], orient, 
-                        pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+        # hog_features = get_hog_features((feature_image[:,:,1], orient, 
+        #                 pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+        hog_features = []
+        for channel in range(feature_image.shape[2]):
+            hog_features.append(get_hog_features(feature_image[:,:,channel], 
+                                orient, pix_per_cell, cell_per_block, 
+                                vis=False, feature_vec=True))
+        hog_features = np.ravel(hog_features) 
         # Append the new feature vector to the features list
         features.append(np.concatenate((spatial_features, hist_features, hog_features)))
+        # features = hog_features
     # Return list of feature vectors
     return features
 
 orient = 9
-pix_per_cell = 4
+pix_per_cell = 8
 cell_per_block = 2
 
 #Create list of feature vectors for cars:
-car_features = extract_features(cars, cspace='RGB', spatial_size=(32, 32),
+car_features = extract_features(cars, cspace='YCrCb', spatial_size=(32, 32),
                         hist_bins=32, hist_range=(0, 256), orient=orient, 
-                        pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=0)
+                        pix_per_cell=pix_per_cell, cell_per_block=cell_per_block)#, hog_channel=0)
 #Create list of feature vectors for non-cars:
-notcar_features = extract_features(non_vehicles, cspace='RGB', spatial_size=(32, 32),
+notcar_features = extract_features(non_vehicles, cspace='YCrCb', spatial_size=(32, 32),
                         hist_bins=32, hist_range=(0, 256), orient=orient, 
-                        pix_per_cell=pix_per_cell, cell_per_block=cell_per_block, hog_channel=0)
+                        pix_per_cell=pix_per_cell, cell_per_block=cell_per_block)#, hog_channel=0)
 
 
 #Normalize features:
@@ -167,17 +177,17 @@ print(t2-t, 'Seconds to predict with SVC')
 
 #Save the trained model
 from sklearn.externals import joblib
-joblib.dump(clf, 'saved_model.pkl') 
+joblib.dump(clf, 'saved_model4.pkl') 
 #saving the scaler:
-joblib.dump(X_scaler, 'saved_scaler.pkl') 
+joblib.dump(X_scaler, 'saved_scaler4.pkl') 
 
 
 #############
 
 #Reload saved model:
 from sklearn.externals import joblib
-saved_clf = joblib.load('saved_model.pkl') 
-saved_scaler = joblib.load('saved_scaler.pkl')
+saved_clf = joblib.load('saved_model4.pkl') 
+saved_scaler = joblib.load('saved_scaler4.pkl')
 #make new prediction:
 # new_prediction = saved_clf.predict(X_test[100].reshape(1, -1))
 # print("New Prediction: ", new_prediction)
