@@ -16,7 +16,7 @@ for i,infile in enumerate(glob.glob(os.path.join(path,'*.png'))):
 non_vehicle_img = np.array(non_vehicle_img)
 
 #pickle non-vehicle images
-with open('non_vehicle4.pickle', 'wb') as handle:
+with open('non_vehicle5.pickle', 'wb') as handle:
     pickle.dump(non_vehicle_img, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -59,16 +59,7 @@ car_img = np.concatenate((car_img_gti_far, car_img_gti_left, car_img_gti_right, 
 
 
 #pickle car images
-with open('car4.pickle', 'wb') as handle:
+with open('car5.pickle', 'wb') as handle:
     pickle.dump(car_img, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-
-# #open file:
-# fileObject = open(file_Name,'r')  
-# # load the object from the file into var b
-# b = pickle.load(fileObject) 
-
-#better:
-# with open('non_veh.pickle', 'rb') as handle:
-#     b = pickle.load(handle)
 
