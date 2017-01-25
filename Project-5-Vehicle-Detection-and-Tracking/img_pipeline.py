@@ -103,8 +103,8 @@ def extract_features(imgs, cspace='YCrCb', spatial_size=(32, 32),
 
 #Uploading the trained, saved model and scaler
 from sklearn.externals import joblib
-saved_clf = joblib.load('saved_model5.pkl') 
-saved_scaler = joblib.load('saved_scaler5.pkl')
+saved_clf = joblib.load('saved_model4.pkl') 
+saved_scaler = joblib.load('saved_scaler4.pkl')
 
 
 image = scipy.misc.imread('/Users/michelecavaioni/Flatiron/My-Projects/Udacity (Self Driving Car)/Project #5 (Vehicle Detection and Tracking/my_img/frame1000.jpg')
