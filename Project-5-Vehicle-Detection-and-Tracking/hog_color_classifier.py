@@ -15,11 +15,11 @@ from sklearn.model_selection import train_test_split
 # from sklearn.cross_validation import train_test_split
 
 #import from pickle non-vehicle images
-with open('non_vehicle5.pickle', 'rb') as handle:
+with open('non_vehicle4.pickle', 'rb') as handle:
     non_vehicles = pickle.load(handle)
 
 #import from pickle car images
-with open('car5.pickle', 'rb') as handle:
+with open('car4.pickle', 'rb') as handle:
     cars = pickle.load(handle)
 
 
@@ -164,6 +164,6 @@ print(t2-t, 'Seconds to predict with SVC')
 
 #Save the trained model
 from sklearn.externals import joblib
-joblib.dump(clf, 'saved_model5.pkl') 
+joblib.dump(clf, 'saved_model4.pkl') 
 #Save the scaler:
-joblib.dump(X_scaler, 'saved_scaler5.pkl') 
+joblib.dump(X_scaler, 'saved_scaler4.pkl') 
