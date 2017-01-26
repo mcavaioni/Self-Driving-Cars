@@ -25,19 +25,19 @@ Below the result of Histogram of Color to the original image.</br>
 *[Ref. Lines 26 - 37 in pipeline.py]*
 
 
-![original](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/image0027.png)
-->*Original image*<-
+![original](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/image0027.png)</br>
+*Original image*
 
-![histogram of color](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/histogram_of_color_image0027.png)
-->*Histogram of colors*<-
+![histogram of color](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/histogram_of_color_image0027.png)</br>
+*Histogram of colors*
 
 **Step 2: Binned Spatial Features**</br>
 As Mentioned above, template matching with raw pixel values is not a robust method, but it still retains good information that we want to use. Although including three color channels of a full resolution image is a bit extensive, so we can perform spatial binning, reducing the dimensions and resolution of an image, while still retaining enough information to help in finding vehicles.
 In my case, I resize the images to a 32x32 spatial space and then use “.ravel()” to create the feature vector.</br>
 *[Ref. Lines 41 - 48 in pipeline.py]*
 
-![binned spatial image](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/binned_spatial_image0027.png)
-<p style="text-align: center;"> Spatial binned features in RGB space </p>
+![binned spatial image](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/binned_spatial_image0027.png)</br>
+*Spatial binned features in RGB space*
 
 **Step 3: Histogram of Oriented Gradients (HOG) Features**</br>
 So far we still haven’t captured an important factor, which is the notion of shape.
@@ -49,8 +49,8 @@ I have tested this method using different parameters, such as orientation, pix_p
 orientation:9; pix_per_cell: 8x8; cell_per_block: 2</br>
 *[Ref. Lines 50 - 66 in pipeline.py]*
 
-![HOG](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/HOG_GTI_right_image0027.png)
-<p style="text-align: center;"> Original iamge and HOG features </p>
+![HOG](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/HOG_GTI_right_image0027.png)</br>
+*Original iamge and HOG features*
 
 **Step 4: Color Space Features**</br>
 I initially used the “regular” RGB color space but a better improvement was achieved transforming the image from RGB space to YCrCb space as well.
@@ -58,8 +58,8 @@ I initially used the “regular” RGB color space but a better improvement was 
 The HOG features method was applied to all three channels of the selected color space.</br>
 *[Ref. Lines 100 - 105 in pipeline.py]*
 
-![color space](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/color_space_ycrcb.png)
-<p style="text-align: center;"> Color space YCbCr features </p>
+![color space](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/color_space_ycrcb.png)</br>
+*Color space YCbCr features*
 
 **Step 5: Combine features**</br>
 I decided to use a combination of the above mentioned features, gathering more useful information about each image.
@@ -68,8 +68,8 @@ The combination of this features gets applied for each set of car and non-car im
 Finally, to avoid different magnitude among the combined features I normalize them.</br>
 *[Ref. Lines 127 - 131 in pipeline.py]*
 
-![combined](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/combined_features.png)
-<p style="text-align: center;"> Original imag, raw combined features and normalized </p>
+![combined](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/combined_features.png)</br>
+*Original imag, raw combined features and normalized*
 
 **Step 6: Train a Classifier**</br>
 Before fitting the features into the classifier I created a label vector for the “car” and “non-car” images, classified as 1 and 0 respectively.
@@ -91,7 +91,7 @@ To do that I created different window sizes (small, medium, big) which slide thr
 *[Ref “slide_window” method in lines 127 - 159 and lines 215 - 222 for specific window sizes (in pipeline.py) ]*</br>
 Here below is the combination all the window sizes mapped throughout the image section. 
 
-![sliding window](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/window_sliding.png)
+![sliding window](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/window_sliding.png)</br>
 
 Each window is then resized to a 64x64 before extracting the combined features as described above.
 I then normalize the feature vector using the scaler saved from the classifier in order to normalize it at the same level as the trained features.
@@ -112,7 +112,7 @@ I ended up cropping around 100 images and then I retrained the classifier and ev
 The improvements were very substantial. 
 Here below the final result of vehicle detection using sliding window search, after thresholding and hard-negative-mining:
 
-![detected boxes](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/detected%20boxes.png)
+![detected boxes](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/detected%20boxes.png)</br>
 
 
 **Step 9: Draw Bounding Boxes**</br>
@@ -127,7 +127,7 @@ Then, I thresholded the binary image and detected the contours around it.</br>
 
 Here below the final result with the detected boxes in blue color and the final surrounding contour in green color.
 
-![detected boxes with contour](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/detected_boxes_with_contour.png)
+![detected boxes with contour](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/detected_boxes_with_contour.png)</br>
 
 
 **Step 10: Video Stream Pipeline**</br>
