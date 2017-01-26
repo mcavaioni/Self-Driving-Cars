@@ -172,4 +172,6 @@ ______________
 - "window_sliding.png": representation fo the whole window search map<br>
 
 
-<b>Video</b> - It contains the pipeling video for the project
+<b>Video</b> - It contains the pipeline video for the project. In particular:</br>
+- "detection_video_final.mp4": represents the final video of vehicle detection<br>
+- "detection_video_combined_with_lane_finding.mp4": represents the combination of vehicle detection and lane finding<br>
