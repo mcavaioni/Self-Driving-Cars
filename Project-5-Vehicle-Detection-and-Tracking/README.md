@@ -149,3 +149,27 @@ Improving this speed will also provide smoother transition in the video pipeline
 Some of the recurrent false positives could still be filtered out applying further hard-negative-mining, but I decided not to do that in order to not make the pipeline “just right” for this video stream.
 Furthermore with a more real-time implementation I could further enhance the pipeline using the detected centroid to track the vehicles’ position.
 
+______________
+
+<i>Files used:</i><br>
+<b>hog_color_classifier.py</b> - The script used to create combined features (HOG, color, space, histogram of color) and fit classifier.<br>
+<b>images.py</b> - The script used to pickle images for cars and non-cars.</br>
+<b>pipeline.py</b> - The script used to run image and video pipeline.</br>
+<b>saved_model4.pkl</b> - Saved model from classifier.</br>
+<b>saved_scalerl4.pkl</b> - Saved scaler for normalization from classifier.</br>
+
+
+<i>Folders:</i><br>
+<b>Output_images</b> - It contains all the images analyzed step-by step. The description of each image is the following:<br>
+- "HOG_GTI_right_image0027.png": representation of HOG features for image0027<br>
+- "binned_spatial_image0027.png": representation of binned spatial features for image0027<br>
+- "color_space_ycrcb.png": representation of color space YCbCr for image0027<br>
+- "combined_features.png": representation of origianl image, combined features, normalized combined features<br>
+- "detected boxes.png": representation of detected boxes of a frame using sliding window search <br>
+- "detected_boxes_with_contour.png": representation of detected boxes with surrounding contour<br>
+- "histogram_of_color_image0027.png": representation of histogram of colors for image0027<br>
+- "image0027.png": original image0027<br>
+- "window_sliding.png": representation fo the whole window search map<br>
+
+
+<b>Video</b> - It contains the pipeling video for the project
