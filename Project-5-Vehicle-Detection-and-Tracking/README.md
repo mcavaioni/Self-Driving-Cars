@@ -26,7 +26,7 @@ Below the result of Histogram of Color to the original image.</br>
 
 
 ![original](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/image0027.png)
-<p style="text-align: center;"> Original image </p>
+->*Original image*<-
 
 ![histogram of color](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/histogram_of_color_image0027.png)
 <p style="text-align: center;"> Histogram of colors </p>
