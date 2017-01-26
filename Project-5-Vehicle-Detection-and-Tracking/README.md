@@ -29,7 +29,7 @@ Below the result of Histogram of Color to the original image.</br>
 ->*Original image*<-
 
 ![histogram of color](https://github.com/mcavaioni/Self-Driving-Cars/blob/master/Project-5-Vehicle-Detection-and-Tracking/output_images/histogram_of_color_image0027.png)
-<p style="text-align: center;"> Histogram of colors </p>
+->*Histogram of colors*<-
 
 **Step 2: Binned Spatial Features**</br>
 As Mentioned above, template matching with raw pixel values is not a robust method, but it still retains good information that we want to use. Although including three color channels of a full resolution image is a bit extensive, so we can perform spatial binning, reducing the dimensions and resolution of an image, while still retaining enough information to help in finding vehicles.
