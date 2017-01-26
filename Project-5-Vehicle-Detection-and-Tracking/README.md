@@ -96,11 +96,12 @@ Here below is the combination all the window sizes mapped throughout the image s
 Each window is then resized to a 64x64 before extracting the combined features as described above.
 I then normalize the feature vector using the scaler saved from the classifier in order to normalize it at the same level as the trained features.
 The saved classifier is finally run on this normalized feature in order to predict if the subregion of the image is a car or not.
-The results that I achieved were good, although some false positives were still getting detected. 
+The results that I achieved were good, although some false positives were still getting detected. </br>
+*[Ref. “single_detected_boxes” method in Lines 163 - 194 in pipeline.py]*</br>
 I tackled this issues with two approaches:
 - thresholding the prediction function</br>
-- hard-negative-mining</br>
-*[Ref. “single_detected_boxes” method in Lines 163 - 194 in pipeline.py]*
+- hard-negative-mining
+
 
 
 **Step 8: Reducing False Positives**</br>
@@ -136,7 +137,7 @@ As we can see from the video there are still some false positives depicted.
 In order to further reduce them, the video stream pipeline implements the following approach.
 For every 7 frames in the video stream the prior 6 detected bounding boxes are collected and overlapped with each other.
 Each overlapping area produces a heat map which is thresholded to a certain value that discerns the bounding boxes that appear in a near position (therefore overlapping) for most of the times, meaning for most of the prior 6 detected frames.</br>
-*[Ref. Lines 288 - 294 in pipeline.py]*
+*[Ref. Lines 288 - 294 in pipeline.py]*</br>
 These high-confidence detections where multiple overlapping detections occur are then identified with the method described above (finding the surrounding contours) and ultimately drawn in a green color, together with the centroid of this green bounding box.
 
 Finally the video is combined with the advanced lane finding pipeline implemented in the previous project.
