@@ -4,18 +4,18 @@ The goal of this project is to write a software pipeline to identify vehicles in
 <b>SOLUTION:</b></br>
 The pipeline is developed in several steps; first for images and then, ultimately, on the video stream.
 
-The steps taken are the following:
-1- Compute histogram of color features 
-2- Compute binned spatial features 
-3- Compute Histogram of Oriented Gradients (HOG) features
-4- Compute color space features
-5- Combine the above features into a list of feature vectors
-6- Train a classifier
-7- Create a sliding window search and detect vehicles in an image
-8- Reducing false positives
-9- Draw bounding boxes on each overlapping detection 
-10- Video Stream Pipeline 
-11- Reduce/segregate false positive in a Video Stream 
+The steps taken are the following:</br>
+1- Compute histogram of color features </br>
+2- Compute binned spatial features </br>
+3- Compute Histogram of Oriented Gradients (HOG) features</br>
+4- Compute color space features</br>
+5- Combine the above features into a list of feature vectors</br>
+6- Train a classifier</br>
+7- Create a sliding window search and detect vehicles in an image</br>
+8- Reducing false positives</br>
+9- Draw bounding boxes on each overlapping detection </br>
+10- Video Stream Pipeline </br>
+11- Reduce/segregate false positive in a Video Stream </br>
 
 
 **Step 1: Histogram of Color Features**</br>
