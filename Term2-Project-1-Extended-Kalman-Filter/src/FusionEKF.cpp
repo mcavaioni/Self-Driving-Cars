@@ -26,12 +26,12 @@ FusionEKF::FusionEKF() {
   TODO:
     * Finish initializing the FusionEKF.
   */
-  R_laser_ << 0.0225, 0,
-              0, 0.0225;
+  R_laser_ << 0.0001, 0, 
+              0, 0.0001;
 
-  R_radar_ << 0.0225, 0, 0,
-              0, 0.0225, 0,
-              0, 0, 0.0225;
+  R_radar_ << 0.01, 0, 0,
+              0, 0.000001, 0,
+              0, 0, 0.01;
 
   H_laser_ << 1, 0, 0, 0,
               0, 1, 0, 0;
@@ -58,7 +58,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
+    // ekf_.x_ << 1, 1, 1, 1;
     
     ekf_.P_ = MatrixXd(4, 4);
     ekf_.P_ << 1, 0, 0, 0,
@@ -84,8 +84,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       if(rho == 0 || phi == 0){
         return;
       }
-
-      ekf_.x_ << rho*cos(phi), rho*sin(phi), rho_dot*cos(phi), rho_dot*sin(phi);
+      while (phi> M_PI) phi-=2.*M_PI;
+      while (phi<-M_PI) phi+=2.*M_PI;
+      ekf_.x_ << rho*cos(phi), rho*sin(phi), 0,0;
       previous_timestamp_ = measurement_pack.timestamp_;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
@@ -130,8 +131,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   ekf_.F_(1, 3) = dt;
 
 
-  noise_ax = 400;
-  noise_ay = 400;
+  noise_ax = 10;
+  noise_ay = 10;
 
   //set the process covariance matrix Q
   ekf_.Q_ = MatrixXd(4, 4);
@@ -166,7 +167,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   }
 
   // print the output
-  cout << "x_ = " << ekf_.x_ << endl;
-  cout << "P_ = " << ekf_.P_ << endl;
+  // cout << "x_ = " << ekf_.x_ << endl;
+  // cout << "P_ = " << ekf_.P_ << endl;
 }
 
