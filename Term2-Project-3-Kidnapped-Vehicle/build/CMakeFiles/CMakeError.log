@@ -1,0 +1,20 @@
+Detecting C [-std=c11] compiler features failed to compile with the following output:
+Change Dir: /Users/michelecavaioni/Flatiron/My-Projects/Udacity-Self-Driving-Car/Term2/Project #3-Kidnapped Vehicle/CarND-Kidnapped-Vehicle-Project/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_27e3a/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_27e3a.dir/build.make CMakeFiles/cmTC_27e3a.dir/build
+make[1]: *** No rule to make target `/Users/michelecavaioni/Flatiron/My-Projects/Udacity-Self-Driving-Car/Term2/Project\', needed by `CMakeFiles/cmTC_27e3a.dir/feature_tests.c.o'.  Stop.
+make: *** [cmTC_27e3a/fast] Error 2
+
+
+
+Detecting CXX [-std=c++14] compiler features failed to compile with the following output:
+Change Dir: /Users/michelecavaioni/Flatiron/My-Projects/Udacity-Self-Driving-Car/Term2/Project #3-Kidnapped Vehicle/CarND-Kidnapped-Vehicle-Project/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_7227b/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_7227b.dir/build.make CMakeFiles/cmTC_7227b.dir/build
+make[1]: *** No rule to make target `/Users/michelecavaioni/Flatiron/My-Projects/Udacity-Self-Driving-Car/Term2/Project\', needed by `CMakeFiles/cmTC_7227b.dir/feature_tests.cxx.o'.  Stop.
+make: *** [cmTC_7227b/fast] Error 2
+
+
+
