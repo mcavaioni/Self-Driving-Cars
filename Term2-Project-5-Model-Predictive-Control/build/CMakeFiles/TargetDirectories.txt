@@ -1,0 +1,3 @@
+/Users/michelecavaioni/Flatiron/My-Projects/Udacity-Self-Driving-Car/Term2/Project #5-Model-Predictive-Control/CarND-MPC-Project/build/CMakeFiles/rebuild_cache.dir
+/Users/michelecavaioni/Flatiron/My-Projects/Udacity-Self-Driving-Car/Term2/Project #5-Model-Predictive-Control/CarND-MPC-Project/build/CMakeFiles/edit_cache.dir
+/Users/michelecavaioni/Flatiron/My-Projects/Udacity-Self-Driving-Car/Term2/Project #5-Model-Predictive-Control/CarND-MPC-Project/build/CMakeFiles/mpc.dir
