@@ -82,9 +82,8 @@ class TLDetector(object):
         self.load_stop_point()
 
         model_ckpt = rospy.get_param('~model_ckpt')
-        directory, _ = os.path.splitext(model_ckpt)
-        print(directory)
-        join_chunks(directory, model_ckpt)
+        # directory, _ = os.path.splitext(model_ckpt)
+        # join_chunks(directory, model_ckpt)
         self.light_classifier = TLClassifier(model_ckpt)
         rate = rospy.Rate(1000)
         rospy.spin()
